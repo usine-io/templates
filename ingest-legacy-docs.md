@@ -59,7 +59,7 @@ Format Markdown, 1 fichier = 1 logiciel, slug stable (`phone-check.md`, pas `pho
 software: "{{Nom commercial}}"
 editor: "{{Éditeur (entreprise)}}"
 category: "{{CRM | ERP | WMS | Compta | Diag | Sheets | Custom}}"
-client_site: "{{kyklos | acme | ...}}"
+client_site: "{{slug-du-site, ex: acme}}"
 date_ingested: "{{YYYY-MM-DD}}"
 ingested_by: "{{Atelier B - prénom}}"
 status: "{{ingest-en-cours | complete | rebloqué}}"

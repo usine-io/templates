@@ -11,7 +11,7 @@
 ---
 title: "PRD POC — {{Nom court du POC}}"
 client: "{{Nom du client}}"
-site: "{{site/prefix Spark, ex: kyklos}}"
+site: "{{site/prefix Spark, ex: acme}}"
 tags: [prd, poc, niveau-{{N}}, {{domaine: wms|erp|cs|integration|tracabilite|...}}]
 date: {{YYYY-MM-DD}}
 status: draft  # draft | review | approved | implementing | live | retired
