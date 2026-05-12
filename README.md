@@ -28,6 +28,10 @@ questionnaire-onboarding   ────►   discovery/fiches/<soft>.md   ◄─
                                             ▼
                                    Déployé chez le client
                                    → boucle d'itération
+
+  ─── PREMIER JOUR ───────────────────────────────────────────────────────────────
+  crash-test/   smoke test (3 routes n8n↔NocoDB) → premier use case guidé par Claude Code
+  ──────────────────────────────────────────────────────────────────────────────────
 ```
 
 ---
@@ -38,6 +42,7 @@ questionnaire-onboarding   ────►   discovery/fiches/<soft>.md   ◄─
 |---|---|
 | [`ingest-legacy-docs.md`](ingest-legacy-docs.md) | Procédure pour ingérer la doc d'un logiciel legacy → produire une fiche-logiciel structurée |
 | [`prd-template.md`](prd-template.md) | Template du PRD pour un POC Spark client (inspiré de `wiki/topics/veille-prd.md`) |
+| [`crash-test/`](crash-test/) | Guide debutant "Premier jour avec Spark" — smoke test + premier use case guide par Claude Code |
 | `poc-from-prd.md` *(à venir)* | Du PRD → assemblage de playbooks → implémentation. Dépend du chantier A (futur repo `spark-kit/playbooks` qui n'existe pas encore). |
 
 ---
@@ -88,6 +93,7 @@ Le 1er site Spark déployé en interne sert d'instance de référence de cette c
 
 ## Comment utiliser ce repo
 
+0. **Premier jour (stack installee)** → suivre le [`crash-test/`](crash-test/) : smoke test des 3 routes, puis premier use case guide par Claude Code. Sortie : stack validee + premier prototype fonctionnel.
 1. **Premier contact client** → utiliser `wiki/topics/questionnaire-onboarding.md` (Spark Vault). Sortie : un rapport de visite client → `<repo-client>/discovery/onboarding/visite-YYYY-MM-DD.md`.
 2. **Identification d'un logiciel à brancher** → ouvrir une fiche en suivant [`ingest-legacy-docs.md`](ingest-legacy-docs.md). Sortie : `<repo-client>/discovery/fiches/<soft>.md`.
 3. **Cadrage d'un POC** → rédiger un PRD en suivant [`prd-template.md`](prd-template.md). Sortie : `<repo-client>/discovery/prds/prd-NNN-<slug>.md`.
