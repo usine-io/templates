@@ -15,27 +15,33 @@ Ce repo accompagne [spark-kit](https://github.com/spark-kit/spark-kit) (installa
   1. crash-test/          Verifier que tout marche + construire ton premier prototype
         │
         ▼
-  2. BIENVENUE.md         Guide pour les utilisateurs de ton equipe
+  2. BIENVENUE.md         Guide du builder : comment bosser avec Claude Code + tips & tricks
         │
         ▼
-  3. Templates            Cadrer un vrai projet (decouverte, PRD, implementation)
+  3. CLAUDE.md            Template du briefing agent a copier dans chaque repo entreprise
         │
         ▼
-  4. Playbooks            Briques d'integration reutilisables (a venir)
+  4. Templates            Cadrer un vrai projet (decouverte, PRD, implementation)
+        │
+        ▼
+  5. Playbooks            Briques d'integration reutilisables (a venir)
 ```
 
 ---
 
 ## 1. Demarrage
 
-| Ressource | Pour qui | Ce qu'on y trouve |
-|-----------|----------|-------------------|
-| [**crash-test/**](crash-test/) | Le builder (toi + Claude Code) | Smoke test des 3 routes n8n-NocoDB, puis premier use case guide par `/plan` |
-| [**BIENVENUE.md**](BIENVENUE.md) | Les utilisateurs de l'equipe | Ce qu'est Spark, ce qu'ils peuvent utiliser, comment demander un nouvel outil |
+| Ressource | Ce qu'on y trouve |
+|-----------|-------------------|
+| [**crash-test/**](crash-test/) | Smoke test des 3 routes n8n-NocoDB, puis premier use case guide par `/plan` |
+| [**BIENVENUE.md**](BIENVENUE.md) | Guide du builder : ou travailler, comment utiliser Claude Code, tips & tricks, pieges courants |
+| [**CLAUDE.md**](CLAUDE.md) | Briefing agent — le fichier que Claude Code lit automatiquement. A copier et adapter dans chaque repo entreprise |
 
 Le crash-test est le **premier truc a faire** apres l'installation. Il valide la stack et te fait construire un prototype fonctionnel en une session.
 
-BIENVENUE.md est le document a partager avec ton equipe une fois que le premier outil est pret. Il repond a "c'est quoi ce truc ?" sans jargon technique.
+BIENVENUE.md est ton guide de reference au quotidien : comment structurer un repo, quand utiliser un formulaire NocoDB vs un endpoint n8n, ou mettre les secrets, comment nommer les workflows.
+
+CLAUDE.md est le template du guide agent. Copie-le dans le repo de chaque entreprise et adapte-le (logiciels connectes, conventions locales, contacts).
 
 ---
 

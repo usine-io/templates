@@ -1,101 +1,202 @@
-# Bienvenue sur Spark
+# Bienvenue, builder
 
-> Tu fais partie d'une equipe qui utilise Spark. Cette page t'explique ce que c'est, ce que tu peux en faire, et comment demander de nouvelles choses.
-
----
-
-## Spark, c'est quoi ?
-
-Spark est un petit serveur pose dans ton entreprise (un Mac Mini). Il connecte tes logiciels existants entre eux — ton CRM, ta facturation, tes fichiers Excel, tes outils de gestion — sans les remplacer.
-
-Concretement, Spark te donne :
-
-- **Des tableaux de bord** pour voir des donnees qui n'etaient nulle part (ou dans la tete de quelqu'un)
-- **Des formulaires** pour saisir des informations sans devoir ouvrir 3 logiciels differents
-- **Des automatisations** : quand un evenement arrive dans un logiciel, quelque chose se passe dans un autre
-
-Tout reste dans l'entreprise. Pas de cloud obscur, pas d'abonnement par utilisateur.
+> Tu as installe la stack Spark ([spark-kit](https://github.com/spark-kit/spark-kit)). Tu as fait le [crash-test](crash-test/). Maintenant : comment travailler au quotidien avec Spark et Claude Code.
 
 ---
 
-## Ce que tu utilises au quotidien
+## Ou tu travailles
 
-### Les ecrans metier (`<prefix>-app.<domain>`)
+Chaque entreprise deployee a **son propre repo**. C'est la que tu lances Claude Code, c'est la que vivent les fichiers de config, les workflows exportes, les pages front, et les notes.
 
-C'est ton adresse principale. Tu y trouves :
+```
+<entreprise>/
+├── CLAUDE.md                ← Claude Code le lit automatiquement a l'ouverture
+├── LESSONS-LEARNED.md       ← ce qui a casse et ce qu'on a appris
+├── .mcp.json                ← connecte Claude Code aux MCP (gitignored)
+├── infra/
+│   ├── .env                 ← secrets (gitignored, JAMAIS commite)
+│   ├── docker-compose.yml
+│   ├── config/
+│   │   ├── Caddyfile
+│   │   ├── postgres/init-db.sh
+│   │   └── nocodb-mcp/Dockerfile
+│   ├── apps/                ← pages HTML servies sur <prefix>-app.<domain>
+│   └── scripts/
+│       ├── tunnel-up.sh
+│       ├── tunnel-down.sh
+│       ├── mcp-n8n.sh       ← wrapper MCP pour Claude Code
+│       └── mcp-nocodb.sh    ← wrapper MCP pour Claude Code
+└── discovery/
+    ├── onboarding/          ← rapports de visite, questionnaires
+    ├── fiches/              ← une fiche par logiciel legacy etudie
+    └── prds/                ← une PRD par POC envisage
+```
 
-- Les **formulaires de saisie** crees pour ton equipe
-- Les **tableaux de bord** avec les indicateurs qui comptent
-- Les **vues** filtrees sur les donnees qui te concernent
-
-Tu n'as pas besoin de mot de passe specifique — l'acces est gere par le tunnel securise de l'entreprise.
-
-### NocoDB (`<prefix>-db.<domain>`)
-
-C'est la base de donnees visuelle. Ca ressemble a un tableur, mais en plus puissant :
-
-- Tu peux **filtrer, trier, grouper** les donnees
-- Tu peux creer tes propres **vues** (par equipe, par statut, par date...)
-- Tu peux utiliser les **formulaires natifs** pour de la saisie simple
-
-Si tu connais Airtable ou Notion, c'est le meme principe — mais heberge chez toi.
-
-### Ce que tu ne touches pas
-
-- **n8n** (`<prefix>-n8n.<domain>`) — c'est le moteur d'automatisation. Seul l'admin Spark y accede pour configurer les connexions entre logiciels.
-- **Les fichiers `.env`** ou la configuration serveur — c'est l'infra, pas ton probleme.
-
----
-
-## Demander un nouvel outil
-
-Tu as un besoin ? Un truc que tu fais a la main et qui pourrait etre automatise ? Un tableau de bord qui te manque ?
-
-**Pas besoin de spec technique.** Decris ton besoin en langage normal :
-
-> *"J'aimerais un ecran ou je vois toutes les commandes en retard, avec le nom du fournisseur et la date prevue. Et pouvoir cocher 'recu' directement."*
-
-> *"Quand on cree un devis dans Pennylane, j'aimerais que ca cree automatiquement une ligne dans notre suivi de prospection."*
-
-> *"On a un fichier Excel avec les references produits qu'on met a jour chaque lundi. Ce serait bien que ce soit visible dans un tableau partage sans devoir envoyer le fichier par email."*
-
-L'admin Spark (ou Claude Code) transforme ca en prototype fonctionnel. Le cycle est rapide : on construit un premier truc en quelques heures, tu testes, tu dis ce qui manque, on ajuste.
+**Regle** : tu lances toujours Claude Code **depuis la racine du repo entreprise**. C'est ce qui permet a Claude de charger le `CLAUDE.md` et le `.mcp.json` automatiquement.
 
 ---
 
-## Les regles du jeu
+## CLAUDE.md — le briefing agent
 
-### Tes donnees restent tes donnees
+Le fichier [`CLAUDE.md`](CLAUDE.md) est le guide que Claude Code lit en arrivant dans un repo Spark. Il contient :
 
-- Tout est stocke sur le Mac Mini dans l'entreprise
-- Les mots de passe des logiciels connectes sont chiffres dans un coffre-fort (pas dans des fichiers texte)
-- Rien ne sort vers un cloud exterieur sans decision explicite
+- Ce qu'est Spark (side-stack, pas remplacement)
+- Le vocabulaire critique (site, prefix, playbook)
+- La stack technique (quels services, quels ports)
+- Les skills et MCP disponibles (n8n-mcp, nocodb-mcp, 7 skills n8n, 1 skill nocodb)
+- Les principes de travail (donnees, secrets, workflows, infra)
+- Les pieges connus (NC_DB_JSON, sizing Colima, tunnel pattern A)
 
-### Spark ne remplace rien
-
-- Ton CRM reste ton CRM. Ton ERP reste ton ERP
-- Spark lit et ecrit dans tes logiciels existants, il ne les remplace pas
-- Si tu debranches Spark, tes logiciels continuent de fonctionner exactement comme avant
-
-### Le prototype d'abord
-
-- On construit un premier truc simple, on voit si ca marche, on ameliore
-- Pas de projet a 6 mois — des iterations courtes
-- Si un prototype ne sert a rien, on le supprime sans consequences
+**Ce fichier se copie et s'adapte** a chaque nouveau site. La version dans ce repo est le template de reference. Dans le repo d'une entreprise, tu y ajouteras les specificites du site (logiciels connectes, conventions locales, contacts).
 
 ---
 
-## Quelque chose ne marche pas ?
+## Comment bosser avec Claude Code
 
-| Symptome | Quoi faire |
-|----------|-----------|
-| Une page ne charge pas | Verifier que le Mac Mini est allume et connecte au reseau |
-| Un formulaire renvoie une erreur | Prevenir l'admin Spark — c'est probablement un workflow a corriger |
-| Les donnees ne sont pas a jour | Les synchronisations tournent a intervalles — attendre quelques minutes, puis prevenir l'admin |
-| Tu ne trouves plus un ecran | L'adresse est `https://<prefix>-app.<domain>/apps/` — mettre en favori |
+### Demarre toujours par /plan
 
-Pour tout le reste : parler a l'admin Spark ou ouvrir une discussion sur le canal dedie.
+Pour tout ce qui depasse un fix rapide, utilise `/plan` :
+
+```
+/plan
+
+Je veux creer un outil de suivi des commandes fournisseurs.
+On recoit environ 20 commandes par semaine.
+Aujourd'hui le suivi est dans un Google Sheet que 3 personnes editent.
+Je veux pouvoir voir les commandes en retard et marquer les receptions.
+```
+
+Claude va proposer une architecture (tables, endpoints, pages), tu valides ou tu ajustes, puis il implemente. Ca evite de construire un truc qui n'est pas ce que tu voulais.
+
+### Utilise les MCP, pas curl
+
+Les MCP (n8n-mcp + nocodb-mcp) sont integres dans le compose. Claude les utilise pour creer des tables, ecrire des workflows, lire des donnees — sans que tu aies a taper de commandes API.
+
+Si Claude dit "je n'ai pas acces au MCP", verifier :
+1. `.mcp.json` existe a la racine du repo
+2. Les cles API sont renseignees dans `.env` (`N8N_API_KEY`, `NOCODB_API_TOKEN`)
+3. La stack tourne (`docker compose ps`)
+
+### Charge les skills avant de configurer
+
+Avant de demander a Claude de creer un workflow n8n complexe :
+
+> Charge la skill n8n-node-configuration et montre-moi les champs requis pour un node HTTP Request avec authentification.
+
+Les skills donnent a Claude la doc de reference — sans elles, il improvise et fait des erreurs.
 
 ---
 
-*Guide utilisateur Spark v1.0 — ce document evolue avec les retours de l'equipe.*
+## Tips & tricks
+
+### Formulaire NocoDB natif vs endpoint n8n
+
+C'est LA question qui revient a chaque POC :
+
+| Situation | Bon outil | Pourquoi |
+|-----------|-----------|---------|
+| Saisie mono-table, champs simples | **Formulaire NocoDB** | Zero code, l'utilisateur va directement dans NocoDB |
+| Saisie qui met a jour 2+ tables | **Endpoint n8n** | NocoDB ne sait pas faire de side-effects cross-table |
+| Saisie avec validation metier | **Endpoint n8n** | Tu veux controler ce qui entre |
+| Lecture simple, tri, filtres | **Vue NocoDB partagee** | Iframe ou lien direct, zero code |
+| Dashboard avec KPIs calcules | **Page HTML + API n8n** | Tu as besoin de croiser des donnees |
+
+**Regle de base** : si un formulaire NocoDB natif suffit, utilise-le. N'ajoute un endpoint n8n que pour les operations composees.
+
+### Nommer les workflows
+
+Convention : `[CATEGORIE] Description courte`
+
+```
+[SYNC]    CRM → NocoDB              synchronisation periodique
+[WEBHOOK] Commande recue            declenchement externe
+[API]     /log-activity             pseudo-API exposee
+[ALERT]   Stock bas                 notification
+[SMOKE]   _t_ping                  test temporaire
+```
+
+Ca aide Claude a comprendre le role de chaque workflow quand il explore la stack.
+
+### Secrets : qui va ou
+
+| Secret | Ou | Pourquoi |
+|--------|---|---------|
+| Mots de passe Postgres, cles de chiffrement | `.env` (infra) | Ce sont des secrets de la stack elle-meme |
+| API keys des logiciels metier (CRM, ERP, facturation) | **n8n Credentials** | Chiffres par `N8N_ENCRYPTION_KEY`, pas en clair dans des fichiers |
+| Tokens NocoDB/n8n pour les MCP | `.env` (infra) | Necessaires au demarrage des conteneurs MCP |
+
+**Jamais** de secret metier dans `.env`. Si Claude te propose de mettre une cle API de logiciel dans `.env`, dis non — ca va dans n8n > Settings > Credentials.
+
+### Les 3 sous-domaines
+
+| Sous-domaine | Qui l'utilise | Ce qu'on y trouve |
+|-------------|--------------|-------------------|
+| `<prefix>-n8n.<domain>` | Le builder uniquement | Editeur de workflows, API, monitoring d'executions |
+| `<prefix>-app.<domain>` | Les equipes + les webhooks | Pages HTML metier (`/apps/*`) + webhooks n8n entrants |
+| `<prefix>-db.<domain>` | Les equipes | NocoDB : vues, formulaires, donnees |
+
+L'utilisateur final ne va jamais sur `-n8n`. Il utilise `-app` (les outils qu'on a construits) et `-db` (les donnees brutes quand il en a besoin).
+
+### Tester avant de livrer
+
+Apres chaque prototype, demande a Claude :
+
+> Teste le prototype : verifie que toutes les pages chargent, que les formulaires ecrivent dans les bonnes tables, et que le dashboard affiche des chiffres coherents.
+
+Claude va tester chaque composant via les MCP et te faire un rapport. Si quelque chose casse, il debuggue.
+
+### Documenter ce qu'on a appris
+
+Apres chaque POC, meme un crash-test :
+
+> Ajoute dans LESSONS-LEARNED.md : ce qu'on a construit, ce qui a marche, ce qui a casse, et les decisions qu'on a prises.
+
+Ces notes sont de l'or pour le prochain POC. Claude les lit au demarrage de chaque session.
+
+---
+
+## Pieges courants
+
+### NocoDB webhook v2 vs v3
+
+Les versions recentes de NocoDB (2026+) ont deprecie le format webhook v2. Si un webhook sortant ne declenche rien :
+- Format v3 : `operation: ["insert"]` (array, pas string)
+- Body : `{{ json data }}`
+- Payload : les donnees sont dans `data.rows[0]`
+
+### n8n derriere un tunnel : les cookies
+
+n8n refuse de fonctionner sans HTTPS (cookies securises). Le Caddyfile doit contenir `header_up X-Forwarded-Proto https` dans chaque bloc `reverse_proxy`. Sans ca, tu verras l'erreur "secure cookie".
+
+### Colima qui manque de memoire
+
+Si les containers redemarrent en boucle silencieusement :
+```bash
+docker run --rm alpine free -h
+```
+Si `available` < 200 MB → `colima stop && colima start --cpu 4 --memory 6 --disk 60`.
+
+### NocoDB et les mots de passe speciaux
+
+Toujours utiliser `NC_DB_JSON` (objet JSON), jamais `NC_DB` (URL). Les caracteres `+/=&%` dans un mot de passe cassent le format URL silencieusement.
+
+### n8n : pas de branches paralleles
+
+Les fan-in dans n8n sont peu fiables. Si tu as besoin de faire A puis B puis C, enchaine-les sequentiellement. `$('NodeName').first().json` sur des resultats paralleles = `undefined`.
+
+---
+
+## Quand tu es pret pour un vrai projet
+
+Le crash-test t'a montre le processus. Pour un vrai deploiement chez une entreprise :
+
+1. **Decouverte** — utilise le questionnaire onboarding (wiki Spark) pour comprendre l'entreprise
+2. **Documentation** — ouvre une fiche par logiciel a brancher avec [`ingest-legacy-docs.md`](ingest-legacy-docs.md)
+3. **Cadrage** — ecris un PRD avec [`prd-template.md`](prd-template.md)
+4. **Construction** — `/plan` dans Claude Code avec le PRD comme contexte
+
+La methodologie est la meme que le crash-test, mais avec un vrai besoin et de vraies donnees.
+
+---
+
+*Guide builder Spark v1.1 (2026-05-12). Se complete avec chaque deploiement.*
