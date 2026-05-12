@@ -30,7 +30,7 @@ champion: "{{prénom du champion interne client}}"
 
 ### 1.1 Le client en 3 lignes
 - **Activité** : {{ex: reconditionnement smartphones, 25 personnes, 3000 unités/mois}}
-- **Pain ciblé** : {{ex: copier-coller IMEI entre Phone Check et Google Sheets, ~2h/jour perdues}}
+- **Pain ciblé** : {{ex: copier-coller IMEI entre MonLogiciel et Google Sheets, ~2h/jour perdues}}
 - **Niveau Spark visé** : niveau {{N}} ({{nom du niveau, cf. manifeste-spark §"niveaux d'intervention"}})
 
 ### 1.2 Objectif du POC en 1 phrase
@@ -63,7 +63,7 @@ champion: "{{prénom du champion interne client}}"
 
 | Système | Rôle métier | Surface d'intégration | Direction du flux | Fiche |
 |---|---|---|---|---|
-| {{ex: Phone Check}} | {{diagnostic phones}} | {{webhook sortant JSON}} | legacy → Spark | `discovery/fiches/phone-check.md` |
+| {{ex: MonLogiciel}} | {{diagnostic phones}} | {{webhook sortant JSON}} | legacy → Spark | `discovery/fiches/mon-logiciel.md` |
 | {{ex: Google Sheets ERP}} | {{ERP de fortune}} | {{Sheets API v4}} | bidirectionnel | `discovery/fiches/google-sheets-erp.md` |
 
 ### 3.2 Surface NocoDB (staging / écrans côté Spark)
@@ -72,7 +72,7 @@ champion: "{{prénom du champion interne client}}"
 
 | Table | Type | Rôle |
 |---|---|---|
-| {{ex: phones_diag}} | nouvelle | {{cache des résultats Phone Check, append-only}} |
+| {{ex: phones_diag}} | nouvelle | {{cache des résultats MonLogiciel, append-only}} |
 | {{ex: phones_state}} | nouvelle | {{état courant + historique par IMEI}} |
 
 **Vues / écrans** :
@@ -83,7 +83,7 @@ champion: "{{prénom du champion interne client}}"
 
 | Workflow | Trigger | Action | Brique playbook |
 |---|---|---|---|
-| {{ex: phone-check-ingest}} | {{webhook Phone Check}} | {{INSERT NocoDB phones_diag + UPDATE phones_state}} | `n8n-webhook-in` + `n8n-nocodb-bridge` *(chantier A — à créer)* |
+| {{ex: mon-logiciel-ingest}} | {{webhook MonLogiciel}} | {{INSERT NocoDB phones_diag + UPDATE phones_state}} | `n8n-webhook-in` + `n8n-nocodb-bridge` *(chantier A — à créer)* |
 
 > Détailler en pseudo-code uniquement à l'échelle qui sert la décision archi. L'implémentation détaillée ne va pas dans le PRD — elle vit dans le repo de site (workflows n8n exportés JSON, scripts).
 
@@ -94,7 +94,7 @@ champion: "{{prénom du champion interne client}}"
 | Rôle | Personnes | Action attendue | Surface |
 |---|---|---|---|
 | {{ex: Opérateur réception}} | {{3 techniciens}} | {{scanner les IMEI à l'arrivée}} | {{tablette → écran NocoDB form}} |
-| {{ex: Chef d'atelier}} | {{Cédric}} | {{voir le pipeline de la journée}} | {{vue "Aujourd'hui"}} |
+| {{ex: Chef d'atelier}} | {{prenom}} | {{voir le pipeline de la journée}} | {{vue "Aujourd'hui"}} |
 | {{ex: Direction}} | {{dirigeant}} | {{stats hebdo}} | {{vue analytics}} |
 
 ---
@@ -130,7 +130,7 @@ champion: "{{prénom du champion interne client}}"
 - **Données sensibles touchées** : {{ex: IMEI = identifiants techniques, pas perso. RGPD : N/A pour ce POC}}
 - **Stockage** : LAN-only, NocoDB sur Spark Mac Mini, pas de cloud externe
 - **Auth/secrets côté Spark** : credentials chiffrés via `N8N_ENCRYPTION_KEY` (cf. archi-technique §4.1)
-- **Auth côté legacy** : {{ex: token API Phone Check, scope minimal lecture, rotation manuelle tous les 6 mois}}
+- **Auth côté legacy** : {{ex: token API MonLogiciel, scope minimal lecture, rotation manuelle tous les 6 mois}}
 - **Backup** : couvert par la stratégie 3-2-1 du site (cf. archi-technique §2.3)
 
 ---
@@ -139,7 +139,7 @@ champion: "{{prénom du champion interne client}}"
 
 | # | Risque / Hypothèse | Probabilité | Impact | Mitigation |
 |---|---|---|---|---|
-| R1 | {{ex: Phone Check change son format webhook sans préavis}} | basse | haut | {{tests automatiques sur structure de payload, alerte Kuma}} |
+| R1 | {{ex: MonLogiciel change son format webhook sans préavis}} | basse | haut | {{tests automatiques sur structure de payload, alerte Kuma}} |
 | R2 | {{ex: réseau Wi-Fi sature pendant les pics de réception}} | moyenne | moyen | {{cf. archi §1.5, switch + IP fixe + Ethernet pour le poste atelier}} |
 | H1 | {{Hypothèse : champion dispo 2h/sem pour valider}} | — | — | {{si fausse → POC mort, escalade direction}} |
 
@@ -157,7 +157,7 @@ champion: "{{prénom du champion interne client}}"
 
 | # | Étape | Durée | Livrable | Owner |
 |---|---|---|---|---|
-| 1 | {{Setup credentials Phone Check côté n8n}} | {{30 min}} | {{credential vault entry}} | {{Atelier B}} |
+| 1 | {{Setup credentials MonLogiciel côté n8n}} | {{30 min}} | {{credential vault entry}} | {{Atelier B}} |
 | 2 | {{Création tables NocoDB}} | {{1h}} | {{schéma + données fictives}} | {{Atelier B}} |
 | 3 | {{Workflow n8n ingest}} | {{2h}} | {{flow JSON exporté + commité}} | {{Atelier B}} |
 | 4 | {{Test bout-en-bout avec champion}} | {{1h}} | {{validation sur 5 cas réels}} | {{champion + Atelier B}} |

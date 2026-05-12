@@ -8,7 +8,7 @@
 
 Spark est un **side-stack** : un Mac Mini pose a cote des systemes existants de l'entreprise. Il ne remplace rien. Le CRM reste. L'ERP reste. Le fichier Excel qui marche depuis 2012 reste. Spark les fait parler entre eux.
 
-**La source de verite business est toujours le systeme metier de l'entreprise** (Phone Check, Pennylane, Google Sheets, ERP, WMS...). NocoDB n'est jamais la source de verite business — c'est un bac a sable, un staging, une surface pour des donnees qui n'existaient nulle part avant. n8n est un pont controle qui ouvre des portes choisies vers les sources metier.
+**La source de verite business est toujours le systeme metier de l'entreprise** (CRM, ERP, Google Sheets, facturation, WMS...). NocoDB n'est jamais la source de verite business — c'est un bac a sable, un staging, une surface pour des donnees qui n'existaient nulle part avant. n8n est un pont controle qui ouvre des portes choisies vers les sources metier.
 
 ---
 
@@ -196,4 +196,4 @@ Le YAML cloudflared vit cote hote (`~/.cloudflared/config-*.yml`), edite par `sc
 
 - Meta Spark : https://github.com/spark-kit/spark-kit
 - Templates (gabarits methodologie) : https://github.com/spark-kit/templates
-- Wiki Spark (manifeste, archi, concurrence) : `~/Documents/spark-vault/wiki/`
+- Wiki Spark (manifeste, archi, concurrence) : `<spark-vault>/wiki/`

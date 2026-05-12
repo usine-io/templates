@@ -116,7 +116,7 @@ Chaque entreprise deployee a son propre repo. Convention :
 | Ressource | Ou |
 |-----------|---|
 | Installation de la stack | [spark-kit/spark-kit](https://github.com/spark-kit/spark-kit) |
-| Manifeste, architecture, vision | `~/Documents/spark-vault/wiki/` |
+| Manifeste, architecture, vision | `<spark-vault>/wiki/` |
 | Incidents et lecons transverses | [INCIDENTS.md](https://github.com/spark-kit/spark-kit/blob/main/INCIDENTS.md) |
 
 ---
