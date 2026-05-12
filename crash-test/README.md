@@ -251,7 +251,17 @@ Tu as un prototype qui tourne. Voici les chemins possibles :
 
 ### Connecter un logiciel existant
 
-Si tu as un logiciel metier a brancher (import de donnees, synchronisation), suis la procedure [`ingest-legacy-docs.md`](../ingest-legacy-docs.md) pour documenter le logiciel, puis redige un PRD avec [`prd-template.md`](../prd-template.md).
+Tu veux brancher un CRM, un ERP, une facturation ? Le reflexe en 3 temps :
+
+1. **Trouve la doc API** du logiciel et copie le lien
+2. **Cree le credential** dans n8n (`Settings > Credentials > Add Credential`) — c'est la que vit la cle API, pas dans un fichier
+3. **Dis a Claude** :
+
+> Voici la doc API de MonLogiciel : [lien]. J'ai cree un credential "MonLogiciel API" dans n8n. Cree un workflow qui recupere les donnees du jour et les ecrit dans NocoDB.
+
+Le guide complet (types de credentials, OAuth2, conventions de nommage) est dans [`BIENVENUE.md` § "Connecter une API externe"](../BIENVENUE.md#connecter-une-api-externe).
+
+Pour un branchement plus complexe (documentation du logiciel legacy, cadrage du POC), suis aussi [`ingest-legacy-docs.md`](../ingest-legacy-docs.md) puis [`prd-template.md`](../prd-template.md).
 
 ### Recommencer avec un autre use case
 

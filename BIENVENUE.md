@@ -127,6 +127,60 @@ Ca aide Claude a comprendre le role de chaque workflow quand il explore la stack
 
 **Jamais** de secret metier dans `.env`. Si Claude te propose de mettre une cle API de logiciel dans `.env`, dis non — ca va dans n8n > Settings > Credentials.
 
+### Connecter une API externe
+
+C'est le geste le plus frequent : tu veux brancher un logiciel (CRM, facturation, ERP, Google Sheets...) a Spark. Voici le flux :
+
+**1. Trouve la doc API du logiciel**
+
+Avant de coder quoi que ce soit, il te faut le lien vers la documentation API. Exemples :
+- Pennylane : `https://pennylane.com/docs/api`
+- Google Sheets : `https://developers.google.com/sheets/api`
+- Un logiciel metier : chercher "NomDuLogiciel API documentation"
+
+Si le logiciel n'a pas d'API, regarde s'il a un export CSV, un webhook sortant, ou un connecteur Zapier (souvent adaptable dans n8n).
+
+**2. Obtiens les identifiants API**
+
+Selon le logiciel :
+- **API Key** : generee dans les parametres du logiciel (souvent "Developers" ou "Integrations")
+- **OAuth2** : client ID + client secret + scope — n8n gere le flow OAuth nativement
+- **Token Bearer** : copie depuis le dashboard du logiciel
+
+**3. Cree le credential dans n8n**
+
+Ouvre `https://<prefix>-n8n.<domain>` puis :
+
+```
+Settings > Credentials > Add Credential
+```
+
+Choisis le type qui correspond :
+- **Header Auth** — pour les API qui attendent un header custom (`x-api-key`, `Authorization`, `xc-token`...)
+- **OAuth2** — pour Google, Microsoft, Slack, et la plupart des SaaS modernes
+- **HTTP Basic Auth** — pour les vieilles API avec login/password
+- Le **connecteur natif** du logiciel si n8n en a un (400+ disponibles)
+
+> Donne un nom parlant au credential : `Pennylane API Production`, `Google Sheets - Compte Atelier`, etc. Les workflows referencent les credentials par nom — un nom clair facilite la portabilite.
+
+**4. Demande a Claude de construire le workflow**
+
+Une fois le credential cree, dis a Claude :
+
+> Voici la doc API de MonLogiciel : [lien]. J'ai cree un credential "MonLogiciel API" dans n8n de type Header Auth. Cree un workflow qui recupere les commandes du jour et les ecrit dans une table NocoDB.
+
+Claude va :
+- Lire la doc (si tu lui donnes le lien)
+- Utiliser le credential par nom dans les nodes HTTP Request
+- Construire le workflow via le MCP n8n
+
+**Le reflexe a prendre** : quand tu veux connecter un logiciel, commence toujours par ces 3 choses :
+1. Le lien vers la doc API
+2. Le credential cree dans n8n
+3. Un prompt qui decrit ce que tu veux faire avec cette API
+
+Ne demande jamais a Claude de stocker une cle API dans un fichier ou dans le code d'un workflow — toujours dans un credential n8n.
+
 ### Les 3 sous-domaines
 
 | Sous-domaine | Qui l'utilise | Ce qu'on y trouve |
