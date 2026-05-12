@@ -1,104 +1,118 @@
-# Spark Templates — Pipeline ingest → PRD → POC
+# Spark Templates
 
-> Gabarits méthodologiques de Spark — pour transformer la découverte d'un client en POC déployable.
->
-> Ce repo contient les **gabarits et procédures réutilisables**. Les **instances** (fiches-logiciel d'un client donné, PRD POC d'un projet précis) vivent dans le repo du site client correspondant (ex: `spark-kit/<client>/discovery/`), pas ici.
->
-> Privé pour démarrer, conçu pour être rendu public à terme — c'est l'intérêt d'un repo séparé.
+> Tout ce qu'il faut pour demarrer avec Spark, construire ton premier prototype, et aller plus loin.
+
+Ce repo accompagne [spark-kit](https://github.com/spark-kit/spark-kit) (installation de la stack). Ici : les ressources pour **utiliser** Spark une fois qu'il tourne.
 
 ---
 
-## Vue d'ensemble du pipeline
+## Par ou commencer
 
 ```
-[wiki Spark]                           [par-site, repo client]                [spark-kit]
-
-questionnaire-onboarding   ────►   discovery/fiches/<soft>.md   ◄────  ingest-legacy-docs.md
-(découverte client,                  (1 fiche par logiciel                  (gabarit + checklist)
- déjà existant)                       legacy touché)
-                                            │
-                                            ▼
-                                   discovery/prds/prd-<NNN>-<slug>.md   ◄──  prd-template.md
-                                   (1 PRD par POC envisagé)                  (gabarit PRD)
-                                            │
-                                            ▼
-                                   POC implémenté (n8n flows,    ◄────  poc-from-prd.md
-                                   tables NocoDB, écrans...)              (à venir — chantier A
-                                            │                              en dépendance)
-                                            ▼
-                                   Déployé chez le client
-                                   → boucle d'itération
-
-  ─── PREMIER JOUR ───────────────────────────────────────────────────────────────
-  crash-test/   smoke test (3 routes n8n↔NocoDB) → premier use case guidé par Claude Code
-  ──────────────────────────────────────────────────────────────────────────────────
+  Stack installee ?
+        │
+        ▼
+  1. crash-test/          Verifier que tout marche + construire ton premier prototype
+        │
+        ▼
+  2. BIENVENUE.md         Guide pour les utilisateurs de ton equipe
+        │
+        ▼
+  3. Templates            Cadrer un vrai projet (decouverte, PRD, implementation)
+        │
+        ▼
+  4. Playbooks            Briques d'integration reutilisables (a venir)
 ```
 
 ---
 
-## Fichiers de ce repo
+## 1. Demarrage
 
-| Fichier | Rôle |
-|---|---|
-| [`ingest-legacy-docs.md`](ingest-legacy-docs.md) | Procédure pour ingérer la doc d'un logiciel legacy → produire une fiche-logiciel structurée |
-| [`prd-template.md`](prd-template.md) | Template du PRD pour un POC Spark client (inspiré de `wiki/topics/veille-prd.md`) |
-| [`crash-test/`](crash-test/) | Guide debutant "Premier jour avec Spark" — smoke test + premier use case guide par Claude Code |
-| `poc-from-prd.md` *(à venir)* | Du PRD → assemblage de playbooks → implémentation. Dépend du chantier A (futur repo `spark-kit/playbooks` qui n'existe pas encore). |
+| Ressource | Pour qui | Ce qu'on y trouve |
+|-----------|----------|-------------------|
+| [**crash-test/**](crash-test/) | Le builder (toi + Claude Code) | Smoke test des 3 routes n8n-NocoDB, puis premier use case guide par `/plan` |
+| [**BIENVENUE.md**](BIENVENUE.md) | Les utilisateurs de l'equipe | Ce qu'est Spark, ce qu'ils peuvent utiliser, comment demander un nouvel outil |
 
----
+Le crash-test est le **premier truc a faire** apres l'installation. Il valide la stack et te fait construire un prototype fonctionnel en une session.
 
-## Articulation avec le reste de l'écosystème Spark
-
-| Brique | Vit où | Statut |
-|---|---|---|
-| Manifeste (vision, niveaux 1-7, thèse IA) | `wiki/topics/manifeste-spark.md` (Spark Vault) | ✅ |
-| Architecture technique kit | `wiki/topics/architecture-technique.md` | ✅ |
-| Questionnaire onboarding (3 phases) | `wiki/topics/questionnaire-onboarding.md` | ✅ |
-| PRD veille (modèle de PRD bien structuré) | `wiki/topics/veille-prd.md` | ✅ (inspirateur de `prd-template.md`) |
-| Méta Spark (roadmap, incidents transverses) | [`spark-kit/spark-kit`](https://github.com/spark-kit/spark-kit) | 🟡 |
-| Patterns d'intégration réutilisables | `spark-kit/playbooks` (chantier A, futur repo) | 🚫 vide |
-| **Gabarits méthodologie** | **ce repo — `spark-kit/templates`** | 🟡 en construction |
-| Outillage Claude (MCP n8n, skill NocoDB) | dans `spark-kit/spark-kit` (chantier C) | 🚫 vide |
-| Fiches-logiciel et PRD POC d'un client | `spark-kit/<client>/discovery/` | par-site, à instancier |
-
-**Règle** : ne pas dupliquer le contenu des docs wiki ici. Référencer.
+BIENVENUE.md est le document a partager avec ton equipe une fois que le premier outil est pret. Il repond a "c'est quoi ce truc ?" sans jargon technique.
 
 ---
 
-## Convention de structure par-site
+## 2. Templates de projet
 
-Chaque site Spark a son propre repo dans l'org `spark-kit`. À la racine de ce repo, prévoir :
+Quand tu passes du prototype a un vrai projet (decouverte d'une entreprise, branchement d'un logiciel existant, cadrage d'un POC) :
+
+| Template | Role | Quand l'utiliser |
+|----------|------|-----------------|
+| [**ingest-legacy-docs.md**](ingest-legacy-docs.md) | Documenter un logiciel existant → fiche-logiciel structuree | Tu decouvres un logiciel a brancher |
+| [**prd-template.md**](prd-template.md) | Cadrer un POC → PRD avec scope, criteres de succes, plan | Tu sais ce que tu veux construire |
+| `poc-from-prd.md` *(a venir)* | Du PRD → assemblage de playbooks → implementation | Le PRD est valide, tu passes au code |
+
+### Flux complet
 
 ```
-<client>/
-├── README.md
-├── CLAUDE.md
-├── LESSONS-LEARNED.md
-├── infra/                # code de déploiement Docker (compose, scripts, config)
+  Questionnaire onboarding (wiki Spark)
+         │
+         ▼
+  Fiches-logiciel (ingest-legacy-docs.md)
+         │
+         ▼
+  PRD du POC (prd-template.md)
+         │
+         ▼
+  Implementation (poc-from-prd.md + playbooks)
+         │
+         ▼
+  Deploye → iteration
+```
+
+Les instances de ces templates (fiches d'un logiciel precis, PRD d'un POC precis) vivent dans le repo du site concerne (`<entreprise>/discovery/`), pas ici.
+
+---
+
+## 3. Playbooks *(a venir)*
+
+Briques d'integration reutilisables — chaque playbook est un pattern prouve qu'on assemble pour construire un POC :
+
+- `n8n-nocodb-bridge` — pseudo-API n8n devant NocoDB (operations multi-tables)
+- `legacy-api-pull` — polling API legacy → NocoDB
+- `legacy-csv-import` — import periodique CSV → NocoDB
+- `n8n-webhook-out` — NocoDB row change → API externe
+
+Ces playbooks n'existent pas encore. Ils emergeront des premiers vrais POCs — le crash-test mini-CRM en est le prototype.
+
+---
+
+## Structure d'un site Spark
+
+Chaque entreprise deployee a son propre repo. Convention :
+
+```
+<entreprise>/
+├── CLAUDE.md                guide agent, adapte a l'entreprise
+├── LESSONS-LEARNED.md       ce qui a casse et ce qu'on a appris
+├── infra/
+│   ├── docker-compose.yml
+│   ├── config/              Caddyfile, init-db.sh, nocodb-mcp/
+│   ├── apps/                pages HTML servies sur <prefix>-app.<domain>
+│   └── scripts/             tunnel, MCP wrappers
 └── discovery/
-    ├── onboarding/
-    │   └── visite-YYYY-MM-DD.md     # rapport de visite, sortie du questionnaire
-    ├── fiches/                      # une fiche par logiciel legacy étudié
-    │   ├── phone-check.md
-    │   ├── google-sheets-erp.md
-    │   └── pennylane.md
-    └── prds/                        # une PRD par POC envisagé
-        ├── prd-001-phone-check-to-noco.md
-        └── prd-002-stock-traceability.md
+    ├── onboarding/          rapports de visite
+    ├── fiches/              une fiche par logiciel legacy etudie
+    └── prds/                une PRD par POC envisage
 ```
 
-Le 1er site Spark déployé en interne sert d'instance de référence de cette convention.
+---
+
+## Liens
+
+| Ressource | Ou |
+|-----------|---|
+| Installation de la stack | [spark-kit/spark-kit](https://github.com/spark-kit/spark-kit) |
+| Manifeste, architecture, vision | `~/Documents/spark-vault/wiki/` |
+| Incidents et lecons transverses | [INCIDENTS.md](https://github.com/spark-kit/spark-kit/blob/main/INCIDENTS.md) |
 
 ---
 
-## Comment utiliser ce repo
-
-0. **Premier jour (stack installee)** → suivre le [`crash-test/`](crash-test/) : smoke test des 3 routes, puis premier use case guide par Claude Code. Sortie : stack validee + premier prototype fonctionnel.
-1. **Premier contact client** → utiliser `wiki/topics/questionnaire-onboarding.md` (Spark Vault). Sortie : un rapport de visite client → `<repo-client>/discovery/onboarding/visite-YYYY-MM-DD.md`.
-2. **Identification d'un logiciel à brancher** → ouvrir une fiche en suivant [`ingest-legacy-docs.md`](ingest-legacy-docs.md). Sortie : `<repo-client>/discovery/fiches/<soft>.md`.
-3. **Cadrage d'un POC** → rédiger un PRD en suivant [`prd-template.md`](prd-template.md). Sortie : `<repo-client>/discovery/prds/prd-NNN-<slug>.md`.
-4. **Implémentation** → assembler des briques playbook (chantier A, futur repo `spark-kit/playbooks`). Sortie : workflows n8n + tables NocoDB + écrans + déploiement, qui vivent dans `<repo-client>/infra/` (ou `<repo-client>/workflows/` à créer).
-
----
-
-*Procédure v1.0 (2026-05-06). À itérer après le 1er POC client réel.*
+*Spark Templates v1.1 (2026-05-12). Ce repo grandit avec chaque nouveau deploiement.*
