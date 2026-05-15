@@ -4,6 +4,31 @@
 
 ---
 
+## Les 4 roles autour de Spark
+
+Spark implique 4 niveaux d'intervention. Dans une petite structure, une seule personne peut cumuler les 4 — mais les casquettes restent distinctes.
+
+| Role | Ce qu'il fait | Ce qu'il touche | Documentation |
+|------|--------------|-----------------|---------------|
+| **Admin / infra** | Installe le Mac Mini, Docker, Colima, le tunnel Cloudflare. Gere le `.env`, les mises a jour, les backups. | Terminal, `docker compose`, fichiers de config, tunnel | [README spark-kit](https://github.com/spark-kit/spark-kit) (installation) |
+| **Gestionnaire de credentials** | Cree les comptes dans n8n/NocoDB. Configure les connexions aux logiciels metier (API keys, OAuth2) dans le coffre-fort n8n. | `<prefix>-n8n.<domain>` > Settings > Credentials | [§ Connecter une API externe](#connecter-une-api-externe) |
+| **Builder** | Concoit et construit les POCs avec Claude Code : tables NocoDB, workflows n8n, pages HTML. Ecrit les PRD, documente les lecons. | Claude Code + MCP, `<prefix>-n8n.<domain>`, `<prefix>-db.<domain>`, repo Git | Ce guide + [crash-test](crash-test/) |
+| **Utilisateur final** | Utilise les outils construits par le builder : formulaires, dashboards, vues. Ne touche jamais a n8n. | `<prefix>-app.<domain>`, `<prefix>-db.<domain>` (vues/formulaires uniquement) | *(a creer : guide utilisateur)* |
+
+### Qui accede a quoi
+
+```
+                -n8n (editeur)     -app (outils)     -db (donnees)     Terminal
+Admin               ✓                  ✓                 ✓               ✓
+Credentials         ✓                  —                 —               —
+Builder             ✓                  ✓                 ✓               ✓
+Utilisateur         —                  ✓                 ✓               —
+```
+
+**Regle cle** : l'utilisateur final ne va **jamais** sur `-n8n`. S'il a besoin de quelque chose, il le demande — le builder le construit. C'est cette separation qui permet de garder la stack stable.
+
+---
+
 ## Ou tu travailles
 
 Chaque entreprise deployee a **son propre repo**. C'est la que tu lances Claude Code, c'est la que vivent les fichiers de config, les workflows exportes, les pages front, et les notes.
