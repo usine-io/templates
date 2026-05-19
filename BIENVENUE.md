@@ -43,14 +43,12 @@ Chaque entreprise deployee a **son propre repo**. C'est la que tu lances Claude 
 │   ├── docker-compose.yml
 │   ├── config/
 │   │   ├── Caddyfile
-│   │   ├── postgres/init-db.sh
-│   │   └── nocodb-mcp/Dockerfile
+│   │   └── postgres/init-db.sh
 │   ├── apps/                ← pages HTML servies sur <prefix>-app.<domain>
 │   └── scripts/
 │       ├── tunnel-up.sh
 │       ├── tunnel-down.sh
-│       ├── mcp-n8n.sh       ← wrapper MCP pour Claude Code
-│       └── mcp-nocodb.sh    ← wrapper MCP pour Claude Code
+│       └── mcp-n8n.sh       ← wrapper MCP n8n pour Claude Code (NocoDB s'utilise via le CLI de la skill)
 └── discovery/
     ├── onboarding/          ← rapports de visite, questionnaires
     ├── fiches/              ← une fiche par logiciel legacy etudie
@@ -68,7 +66,7 @@ Le fichier [`CLAUDE.md`](CLAUDE.md) est le guide que Claude Code lit en arrivant
 - Ce qu'est Spark (side-stack, pas remplacement)
 - Le vocabulaire critique (site, prefix, playbook)
 - La stack technique (quels services, quels ports)
-- Les skills et MCP disponibles (n8n-mcp, nocodb-mcp, 7 skills n8n, 1 skill nocodb)
+- Les skills et l'outillage live (MCP n8n + CLI NocoDB via la skill ; 7 skills n8n, 1 skill nocodb)
 - Les principes de travail (donnees, secrets, workflows, infra)
 - Les pieges connus (NC_DB_JSON, sizing Colima, tunnel pattern A)
 
@@ -93,14 +91,14 @@ Je veux pouvoir voir les commandes en retard et marquer les receptions.
 
 Claude va proposer une architecture (tables, endpoints, pages), tu valides ou tu ajustes, puis il implemente. Ca evite de construire un truc qui n'est pas ce que tu voulais.
 
-### Utilise les MCP, pas curl
+### Outillage live de Claude : MCP n8n + CLI NocoDB
 
-Les MCP (n8n-mcp + nocodb-mcp) sont integres dans le compose. Claude les utilise pour creer des tables, ecrire des workflows, lire des donnees — sans que tu aies a taper de commandes API.
+- **n8n** : MCP integre dans le compose. Claude lit/ecrit les workflows directement.
+- **NocoDB** : pas de MCP — Claude passe par le CLI `nocodb.sh` de la skill (API v3, PAT). Raison : l'ecosysteme MCP NocoDB n'est pas stable contre les versions recentes — on documente uniquement ce qui marche aujourd'hui. Cf. INC-2026-05-19 dans `spark-kit/INCIDENTS.md`.
 
-Si Claude dit "je n'ai pas acces au MCP", verifier :
-1. `.mcp.json` existe a la racine du repo
-2. Les cles API sont renseignees dans `.env` (`N8N_API_KEY`, `NOCODB_API_TOKEN`)
-3. La stack tourne (`docker compose ps`)
+Si Claude dit "je n'ai pas acces" :
+1. Pour n8n : `.mcp.json` existe a la racine du repo, la stack tourne (`docker compose ps`), `N8N_API_KEY` est dans `.env`.
+2. Pour NocoDB : la skill `nocodb` est installee (`~/.claude/skills/nocodb/`), `NOCODB_API_TOKEN` est dans `.env` et le PAT a ete copie immediatement apres la creation dans la modale (NocoDB ne le re-affiche jamais).
 
 ### Charge les skills avant de configurer
 
@@ -148,7 +146,7 @@ Ca aide Claude a comprendre le role de chaque workflow quand il explore la stack
 |--------|---|---------|
 | Mots de passe Postgres, cles de chiffrement | `.env` (infra) | Ce sont des secrets de la stack elle-meme |
 | API keys des logiciels metier (CRM, ERP, facturation) | **n8n Credentials** | Chiffres par `N8N_ENCRYPTION_KEY`, pas en clair dans des fichiers |
-| Tokens NocoDB/n8n pour les MCP | `.env` (infra) | Necessaires au demarrage des conteneurs MCP |
+| `N8N_API_KEY` (pour le MCP n8n) et `NOCODB_API_TOKEN` (PAT v3, lu par le CLI nocodb.sh) | `.env` (infra) | Necessaires a l'outillage agent |
 
 **Jamais** de secret metier dans `.env`. Si Claude te propose de mettre une cle API de logiciel dans `.env`, dis non — ca va dans n8n > Settings > Credentials.
 

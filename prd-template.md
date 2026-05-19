@@ -5,19 +5,34 @@
 > Les sections marquées *(facultatif)* peuvent être omises sur un POC trivial — mais expliquer pourquoi en haut du document.
 > Inspiré du PRD bien structuré `wiki/topics/veille-prd.md`. Lire avant rédaction : `wiki/topics/manifeste-spark.md` (vision, niveaux 1-7) et la ou les fiches-logiciel des systèmes touchés (`discovery/fiches/*.md`).
 
+> **Frontmatter = source unique de vérité du PRD.** Le frontmatter YAML ci-dessous contient toutes les métadonnées d'identité, de contexte, de cycle de vie et d'affichage. Un tracker NocoDB optionnel (cf. `prd-003` chez kyklos) lit ces frontmatters pour produire un miroir Kanban/Liste — il ne stocke jamais d'info que le `.md` ne porte pas. Conséquence : pour changer le statut d'un PRD, on édite ici et on commit. Pas d'UI Kanban à éditer.
+
 ---
 
 ```markdown
 ---
+# === Identite ===
 title: "PRD POC — {{Nom court du POC}}"
+slug: "prd-NNN-{{slug-court}}"           # ex: prd-007-wms-pieces. Doit matcher le nom du fichier.
+version: 0.1
+
+# === Contexte projet ===
 client: "{{Nom du client}}"
 site: "{{site/prefix Spark, ex: acme}}"
-tags: [prd, poc, niveau-{{N}}, {{domaine: wms|erp|cs|integration|tracabilite|...}}]
-date: {{YYYY-MM-DD}}
-status: draft  # draft | review | approved | implementing | live | retired
-version: 0.1
 owner: "{{Atelier B - prénom}}"
 champion: "{{prénom du champion interne client}}"
+niveau_spark: {{N}}                       # 1..7 — cf. manifeste Spark §"niveaux d'intervention"
+domaine: [{{wms|erp|crm|integration|meta|tracabilite|cs}}]   # liste, multi possible
+tags: [prd, poc, niveau-{{N}}, {{domaine}}]               # tags d'affichage libres (legacy + recherche)
+
+# === Cycle de vie ===
+status: draft                             # idea | draft | review | approved | implementing | live | retired | rejected
+date: {{YYYY-MM-DD}}                      # date de rédaction initiale
+promoted_at:                              # rempli quand `idea` → `draft`
+approved_at:                              # rempli quand `review` → `approved`
+started_at:                               # rempli quand `approved` → `implementing`
+live_at:                                  # rempli quand `implementing` → `live`
+retired_at:                               # rempli quand `live` → `retired` ou `* → rejected`
 ---
 
 # PRD POC — {{Nom du POC}}
@@ -195,7 +210,12 @@ champion: "{{prénom du champion interne client}}"
 
 ## Notes pour le rédacteur
 
-- **Numéro PRD** : 3 chiffres incrémental par-site (`prd-001`, `prd-002`...). Le numéro reste figé même si le statut évolue.
+- **Numéro PRD** : 3 chiffres incrémental par-site (`prd-001`, `prd-002`...). Le numéro reste figé même si le statut évolue. Le `slug` du frontmatter doit matcher le nom du fichier.
 - **Si le POC est trivial** (<2h dev, 1 brique, 1 utilisateur) : un PRD ultra-court à 4 sections (1, 2, 5, 9) suffit. Plutôt qu'éliminer la spec, on la compresse.
 - **Si le POC mute en gros chantier** : ne pas étendre le PRD, en ouvrir un nouveau (`prd-NNN+1-<sous-slug>`) qui référence le précédent. Le PRD original est figé.
-- **Statuts** : `draft` (rédaction) → `review` (relu champion + Atelier B) → `approved` (go pour implémenter) → `implementing` (en cours) → `live` (en prod, monitoring) → `retired` (POC arrêté ou remplacé).
+- **Statuts (lifecycle complet)** :
+  - `idea` : capture brute, pas encore promue. Pas obligé d'avoir un `slug` ou un fichier — peut vivre uniquement dans le tracker NocoDB en attendant.
+  - `draft` (rédaction) → `review` (relu champion + Atelier B) → `approved` (go pour implémenter) → `implementing` (en cours) → `live` (en prod, monitoring) → `retired` (POC arrêté ou remplacé).
+  - `rejected` : terminal alternatif depuis `idea` ou `draft` — note la raison dans une §11 Annexes ou en commentaire.
+- **Dates de transition (`*_at`)** : à remplir à chaque transition. Convention ISO `YYYY-MM-DD` ou `YYYY-MM-DDTHH:MM:SSZ`. Ce sont elles que le tracker NocoDB lit pour son timeline / calendar.
+- **Frontmatter complet = condition d'apparition propre dans le tracker.** Un champ manquant n'est pas bloquant (le tracker affiche `null`), mais c'est moins lisible. Au minimum : `title`, `slug`, `status`, `niveau_spark`, `domaine`, `owner`.

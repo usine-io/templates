@@ -2,7 +2,7 @@
 
 > Tu viens d'installer la stack (README de spark-kit). Les services tournent, le tunnel est ouvert. Maintenant : est-ce que ca marche vraiment ? Et surtout : comment construire ton premier truc utile ?
 >
-> Ce guide se fait **entierement avec Claude Code**. Tu ne vas pas ecrire de scripts ni configurer des nodes a la main. Tu vas decrire ce que tu veux, Claude le fait via les MCP (n8n-mcp + nocodb-mcp).
+> Ce guide se fait **entierement avec Claude Code**. Tu ne vas pas ecrire de scripts ni configurer des nodes a la main. Tu vas decrire ce que tu veux, Claude le fait via le MCP n8n (workflows) et le CLI NocoDB de la skill `nocodb` (tables, donnees).
 
 ---
 
@@ -16,13 +16,15 @@
 - [ ] Cles API renseignees dans `.env` (`N8N_API_KEY`, `NOCODB_API_TOKEN`)
 - [ ] Claude Code lance dans le repo du site, avec les MCP connectes
 
-### Verifier que les MCP repondent
+### Verifier l'outillage live
 
 Avant tout, tape dans Claude Code :
 
 > Liste les workflows n8n existants et les tables NocoDB.
 
-Si Claude repond avec des listes (meme vides), les MCP fonctionnent. S'il dit qu'il ne peut pas se connecter, revoir la section "Travailler avec Claude Code" du README spark-kit.
+Claude appelle le MCP n8n (workflows) et le CLI `nocodb.sh` de la skill (tables). Si les deux repondent avec des listes (meme vides), l'outillage fonctionne. Si l'un echoue :
+- **n8n** : revoir la section "Travailler avec Claude Code" du README spark-kit (verifier `.mcp.json`, `N8N_API_KEY`, `docker compose ps`).
+- **NocoDB** : verifier que `NOCODB_API_TOKEN` est dans `.env` et que la skill `nocodb` est installee globalement.
 
 ---
 

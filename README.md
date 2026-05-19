@@ -100,7 +100,7 @@ Chaque entreprise deployee a son propre repo. Convention :
 ├── LESSONS-LEARNED.md       ce qui a casse et ce qu'on a appris
 ├── infra/
 │   ├── docker-compose.yml
-│   ├── config/              Caddyfile, init-db.sh, nocodb-mcp/
+│   ├── config/              Caddyfile, init-db.sh
 │   ├── apps/                pages HTML servies sur <prefix>-app.<domain>
 │   └── scripts/             tunnel, MCP wrappers
 └── discovery/
