@@ -5,7 +5,7 @@
 > Les sections marquées *(facultatif)* peuvent être omises sur un POC trivial — mais expliquer pourquoi en haut du document.
 > Inspiré du PRD bien structuré `wiki/topics/veille-prd.md`. Lire avant rédaction : `wiki/topics/manifeste-spark.md` (vision, niveaux 1-7) et la ou les fiches-logiciel des systèmes touchés (`discovery/fiches/*.md`).
 
-> **Frontmatter = source unique de vérité du PRD.** Le frontmatter YAML ci-dessous contient toutes les métadonnées d'identité, de contexte, de cycle de vie et d'affichage. Un tracker NocoDB optionnel (cf. `prd-003` chez kyklos) lit ces frontmatters pour produire un miroir Kanban/Liste — il ne stocke jamais d'info que le `.md` ne porte pas. Conséquence : pour changer le statut d'un PRD, on édite ici et on commit. Pas d'UI Kanban à éditer.
+> **Frontmatter = source unique de vérité du PRD.** Le frontmatter YAML ci-dessous contient toutes les métadonnées d'identité, de contexte, de cycle de vie et d'affichage. Un tracker NocoDB optionnel peut lire ces frontmatters pour produire un miroir Kanban/Liste via un workflow n8n de sync — il ne stocke jamais d'info que le `.md` ne porte pas. Conséquence : pour changer le statut d'un PRD, on édite ici et on commit. Pas d'UI Kanban à éditer.
 
 ---
 

@@ -184,6 +184,8 @@ Choisis le type qui correspond :
 - **HTTP Basic Auth** — pour les vieilles API avec login/password
 - Le **connecteur natif** du logiciel si n8n en a un (400+ disponibles)
 
+> Cas particulier NocoDB : si tu cree un credential pour talker a l'instance NocoDB de la stack Spark, choisis le type natif **API Token (`nocoDbApiToken`)**, pas Header Auth generique. C'est le canal propre pour envoyer le PAT `nc_pat_...` via le header `xc-token`.
+
 > Donne un nom parlant au credential : `Pennylane API Production`, `Google Sheets - Compte Atelier`, etc. Les workflows referencent les credentials par nom — un nom clair facilite la portabilite.
 
 **4. Demande a Claude de construire le workflow**

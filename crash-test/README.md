@@ -70,13 +70,13 @@ On va creer une boucle : un "ping" entre dans n8n, s'ecrit dans NocoDB, NocoDB n
 
 > Cree une base `_t_smoke` dans NocoDB avec 2 tables :
 >
-> `_t_pings` : colonnes `source` (SingleLineText), `payload` (LongText). Les colonnes Id et CreatedAt sont automatiques.
+> `_t_pings` : colonnes `source` (SingleLineText), `payload` (LongText). Les colonnes Id et CreatedTime sont automatiques.
 >
-> `_t_echoes` : colonnes `ping_id` (Number), `note` (LongText). Id et CreatedAt automatiques aussi.
+> `_t_echoes` : colonnes `ping_id` (Number), `note` (LongText). Id et CreatedTime automatiques aussi.
 >
 > Confirme-moi les IDs des tables une fois creees.
 
-Claude va utiliser le MCP nocodb pour creer la base et les tables. Il te donnera les IDs — tu en auras besoin pour la suite (Claude les retient dans le contexte).
+Claude va utiliser le CLI `nocodb.sh` de la skill `nocodb` (API v3) pour creer la base et les tables. Il te donnera les IDs — tu en auras besoin pour la suite (Claude les retient dans le contexte).
 
 ### Prompt 2 — Creer le credential NocoDB dans n8n
 
