@@ -12,19 +12,22 @@ Ce repo accompagne [spark-kit](https://github.com/spark-kit/spark-kit) (installa
   Stack installee ?
         │
         ▼
-  1. crash-test/          Verifier que tout marche + construire ton premier prototype
+  1. GETTING-STARTED.md   Premier boot d'un repo client : skills Claude, env, credentials n8n
         │
         ▼
-  2. BIENVENUE.md         Guide du builder : comment bosser avec Claude Code + tips & tricks
+  2. crash-test/          Verifier que tout marche + construire ton premier prototype
         │
         ▼
-  3. CLAUDE.md            Template du briefing agent a copier dans chaque repo entreprise
+  3. BIENVENUE.md         Guide du builder : comment bosser avec Claude Code + tips & tricks
         │
         ▼
-  4. Templates            Cadrer un vrai projet (decouverte, PRD, implementation)
+  4. CLAUDE.md            Template du briefing agent a copier dans chaque repo entreprise
         │
         ▼
-  5. Playbooks            Briques d'integration reutilisables (a venir)
+  5. Templates            Cadrer un vrai projet (decouverte, PRD, implementation)
+        │
+        ▼
+  6. Playbooks            Briques d'integration reutilisables (a venir)
 ```
 
 ---
@@ -33,11 +36,12 @@ Ce repo accompagne [spark-kit](https://github.com/spark-kit/spark-kit) (installa
 
 | Ressource | Ce qu'on y trouve |
 |-----------|-------------------|
+| [**GETTING-STARTED.md**](GETTING-STARTED.md) | Premier boot d'un repo client : skills Claude (`/skill nocodb`, `/skill n8n-*`), .env, premier `docker compose up`, credentials n8n, verifs |
 | [**crash-test/**](crash-test/) | Smoke test des 3 routes n8n-NocoDB, puis premier use case guide par `/plan` |
 | [**BIENVENUE.md**](BIENVENUE.md) | Guide du builder : ou travailler, comment utiliser Claude Code, tips & tricks, pieges courants |
 | [**CLAUDE.md**](CLAUDE.md) | Briefing agent — le fichier que Claude Code lit automatiquement. A copier et adapter dans chaque repo entreprise |
 
-Le crash-test est le **premier truc a faire** apres l'installation. Il valide la stack et te fait construire un prototype fonctionnel en une session.
+`GETTING-STARTED` est le **premier truc a faire** sur une nouvelle machine ou un nouveau repo client. Suivi du crash-test pour valider que la chaine bout-en-bout marche, puis le builder peut entrer dans le quotidien (BIENVENUE).
 
 BIENVENUE.md est ton guide de reference au quotidien : comment structurer un repo, quand utiliser un formulaire NocoDB vs un endpoint n8n, ou mettre les secrets, comment nommer les workflows.
 

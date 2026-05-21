@@ -1,6 +1,8 @@
 # Bienvenue, builder
 
 > Tu as installe la stack Spark ([spark-kit](https://github.com/spark-kit/spark-kit)). Tu as fait le [crash-test](crash-test/). Maintenant : comment travailler au quotidien avec Spark et Claude Code.
+>
+> **Nouvelle machine ou nouveau repo client ?** Avant le crash-test, suivre [GETTING-STARTED.md](GETTING-STARTED.md) (skills Claude, premier boot stack, credentials n8n).
 
 ---
 

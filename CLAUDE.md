@@ -4,6 +4,30 @@
 
 ---
 
+## ⚠️ REGLE D'OR — avant toute action technique
+
+**Pour toute session qui touche NocoDB, n8n ou ecrans Caddy, charger immediatement** :
+
+```
+/skill nocodb                    # CLI nocodb.sh + reference API v3
+/skill n8n-workflow-patterns     # patterns architecturaux
+/skill n8n-expression-syntax     # $json.body.X, expressions {{}}
+/skill n8n-mcp-tools-expert      # formats nodeType, validation
+```
+
+Et **lire la memoire `spark-pitfalls-catalog`** (~30 pieges cristallises sur les premiers POCs Spark). Si elle n'est pas presente sur la machine, voir `GETTING-STARTED.md` §3c pour la copier depuis un repo Spark existant.
+
+**Les 3 pieges les plus couteux** (ceux qui reviennent meme apres avoir vu les autres) :
+- **N3 (NocoDB v3 Links)** : `{fields: {champ_link: {id: X}}}` a l'insert NE CREE PAS le lien. Le champ retourne juste un compteur. Solution : POST `/api/v3/data/{base}/{table}/links/{link_field_id}/{record_id}` body `[{id: X}]` separement apres l'insert.
+- **W3 (n8n expressions JSON)** : `={{ JSON.stringify({...}) }}` plante "invalid syntax" si la struct est complexe. Solution : Code node intermediaire qui prepare la string, puis HTTP node consomme `={{ $json.insert_body }}`.
+- **C1 (Docker bind mount)** : un `mv` d'un dossier monte ne propage PAS dans le container. `docker compose restart <service>` necessaire. Un simple ajout/modif de fichier OK sans restart.
+
+**Skipper la regle d'or coute 2-3h de bugs evitables par session** (vecu sur le premier gros build WMS v2). Cette section est en haut volontairement.
+
+Premiere installation sur une nouvelle machine ? → suivre `GETTING-STARTED.md`.
+
+---
+
 ## Ce qu'est Spark
 
 Spark est un **side-stack** : un Mac Mini pose a cote des systemes existants de l'entreprise. Il ne remplace rien. Le CRM reste. L'ERP reste. Le fichier Excel qui marche depuis 2012 reste. Spark les fait parler entre eux.
