@@ -1,7 +1,7 @@
 # Setup Caddy — reverse-proxy interne (exemple projet ACME)
 
-> Document générique transmissible. Substituer `ACME`/`acme` par le préfixe réel
-> du projet (`kyklos`, `leanflow`, etc.) et `<domain>` par la zone Cloudflare réelle.
+> Document générique transmissible. Substituer `ACME`/`acme` par le slug court du projet client
+> et `<domain>` par la zone Cloudflare réelle.
 > Aucune valeur de secret n'apparaît ici. À lire après `cloudflared.md`.
 
 ---
