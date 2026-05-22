@@ -4,6 +4,8 @@
 
 Ce repo accompagne [spark-kit](https://github.com/spark-kit/spark-kit) (installation de la stack). Ici : les ressources pour **utiliser** Spark une fois qu'il tourne.
 
+Ces ressources vont vous permettre de vous offrir un guide à partager avec le LLM qui vous accompagne dans le code. Cela vous permettra de prototyper dans un cadre plus sécurisé et plus normé. Lorsque des équipes tech récupéreront le projet pour le passer en prod, elles trouveront un ensemble de documents qui les aidera à faire la transition vers le legacy (si cela est nécessaire).
+
 ---
 
 ## Par ou commencer
