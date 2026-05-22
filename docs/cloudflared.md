@@ -161,4 +161,4 @@ curl -sI https://acme-app.<domain>/            # 200 attendu
 
 ## 10. Pour un nouveau projet client sur la même machine
 
-Tout ce qu'il faut : un nouveau préfixe (`leanflow`, `kyklos`…), copier les scripts, changer les noms de variables (`ACME_*` → `<PREFIX>_*`) et les marqueurs (`# >>> <prefix>-begin`). Le même tunnel Cloudflare peut servir plusieurs projets, ou chaque projet peut avoir le sien — au choix.
+Tout ce qu'il faut : un nouveau préfixe (`projet01`, `projet02`…), copier les scripts, changer les noms de variables (`ACME_*` → `<PREFIX>_*`) et les marqueurs (`# >>> <prefix>-begin`). Le même tunnel Cloudflare peut servir plusieurs projets, ou chaque projet peut avoir le sien — au choix.
