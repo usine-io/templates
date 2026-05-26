@@ -23,6 +23,7 @@ Temps cible : **30-45 min** la 1ere fois sur une machine, **5 min** sur une mach
 | **git** | `git --version` | (present par defaut macOS) |
 | **node + npx** | `node --version` (≥ 20) | `brew install node` |
 | **python3** | `python3 --version` (≥ 3.11) | (present par defaut macOS) |
+| **tmux** | `tmux -V` | `brew install tmux` — requis pour §8 (Remote Control persistant) |
 
 **Sizing Colima** : ≤ 4 GiB sur Mac dev 8 GB (memoire unifiee), 6 GiB sur Mac Mini Spark 16+ GB. Voir CLAUDE.md §Pieges connus.
 
