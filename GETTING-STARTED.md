@@ -191,7 +191,56 @@ Si toutes ces verifications passent → la machine et le repo sont **prets**. Si
 
 ---
 
-## §8 — Premier prototype
+## §8 — Lancer une session de travail persistante (Remote Control + tmux)
+
+> Recommande sur Mac mini partage entre plusieurs builders. Permet d'avoir une UI
+> Claude Code Desktop / navigateur sur un laptop, tout en gardant Claude qui agit
+> sur le serveur (filesystem serveur, Docker serveur, MCP serveur), sans perdre la
+> session a chaque deconnexion SSH.
+
+### 8a — Lancer ta session sur le Mac mini
+
+```bash
+# En SSH sur le Mac mini
+tmux new-session -d -s <prenom>-acme \
+  "cd ~/acme && claude remote-control --name '<Prenom> · ACME'"
+```
+
+Puis depuis ton laptop (Claude Code Desktop ou navigateur claude.ai/code), tu retrouves la session **"<Prenom> · ACME"** et tu lui parles. Tous les outils (Read/Edit/Bash, MCP n8n, CLI nocodb) agissent sur le serveur.
+
+### 8b — Pourquoi tmux est obligatoire
+
+`claude remote-control` seul meurt a la fermeture du terminal qui l'a lance (deconnexion SSH, fermeture de fenetre, sleep laptop). `tmux` detache le processus, il survit jusqu'a `tmux kill-session`.
+
+Sans tmux : a la moindre coupure, la session distante affiche "session disconnected" — mauvaise experience, perte de contexte.
+
+### 8c — Commandes tmux utiles
+
+```bash
+tmux ls                              # liste des sessions actives
+tmux attach -t <prenom>-acme         # reprendre la main en local (Ctrl+B D pour detacher)
+tmux kill-session -t <prenom>-acme   # fin de journee / nettoyage
+```
+
+### 8d — Multi-builder sur la meme machine
+
+Chaque builder a son **propre user Unix** sur le Mac mini, son **propre clone** dans son `$HOME` (ex: `/Users/martin/acme/`), et lance sa propre session :
+
+```bash
+# Builder 1
+tmux new -d -s benjamin-acme "cd ~/acme && claude remote-control --name 'Benjamin · ACME'"
+
+# Builder 2
+tmux new -d -s martin-acme "cd ~/acme && claude remote-control --name 'Martin · ACME'"
+```
+
+Chacun retrouve sa session depuis son laptop. La stack Docker reste unique (servie par le Mac mini), partagee entre les builders. Les modifications de code se font dans le clone perso de chaque builder, qui push sur GitHub.
+
+> ⚠️ Conventions multi-builder ("parallel prototyping" : 1 builder = 1 PRD, perimetres orthogonaux) a documenter dans le `CLAUDE.md` du repo client.
+
+---
+
+## §9 — Premier prototype
 
 Une fois ce guide complete, suivre :
 1. **[crash-test/](crash-test/)** — smoke test des 3 routes + premier use case guide
@@ -200,7 +249,7 @@ Une fois ce guide complete, suivre :
 
 ---
 
-## §9 — En cas de probleme
+## §10 — En cas de probleme
 
 Catalogue des pieges cristallises (~30 NocoDB v3 + n8n + Caddy) :
 → Memoire `spark-pitfalls-catalog` (chargee auto par Claude — si copiee en §3c)
