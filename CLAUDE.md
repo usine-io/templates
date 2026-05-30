@@ -6,23 +6,51 @@
 
 ## ⚠️ REGLE D'OR — avant toute action technique
 
-**Pour toute session qui touche NocoDB, n8n ou ecrans Caddy, charger immediatement** :
+**Obligatoire — avant d'ecrire le moindre workflow, table NocoDB ou page front, charger les 2 skills coeur** (non negociable, c'est le harnais Spark) :
 
 ```
-/skill spark-nocodb-v3-patterns  # pieges data-layer NocoDB v3 (Links, Lookups, bulk) — Spark
-/skill spark-n8n-pseudo-api      # construire un endpoint webhook->NocoDB — Spark
-/skill nocodb                    # CLI nocodb.sh + reference API v3
-/skill n8n-workflow-patterns     # patterns architecturaux
-/skill n8n-expression-syntax     # $json.body.X, expressions {{}}
-/skill n8n-mcp-tools-expert      # formats nodeType, validation
+/skill spark-nocodb-v3-patterns  # OBLIGATOIRE — pieges data-layer NocoDB v3 (Links, Lookups, bulk)
+/skill spark-n8n-pseudo-api      # OBLIGATOIRE — construire un endpoint webhook->NocoDB
 ```
 
-Les deux skills `spark-*` portent la connaissance empirique cristallisee sur les POCs (les ~30 pieges N/W). Elles sont **versionnees dans le kit** (`spark-kit/templates/skills/`), donc presentes sur toute machine ou les skills Spark sont installees — contrairement a la memoire `spark-pitfalls-catalog`, qui reste un complement per-machine (catalogue brut + sections C/F/P pas encore migrees en skill). Installation des skills : voir `skills/README.md`.
+**Au besoin (trigger situationnel), charger aussi** :
 
-**Les 3 pieges les plus couteux** (ceux qui reviennent meme apres avoir vu les autres) :
-- **N3 (NocoDB v3 Links)** : `{fields: {champ_link: {id: X}}}` a l'insert NE CREE PAS le lien. Le champ retourne juste un compteur. Solution : POST `/api/v3/data/{base}/{table}/links/{link_field_id}/{record_id}` body `[{id: X}]` separement apres l'insert.
-- **W3 (n8n expressions JSON)** : `={{ JSON.stringify({...}) }}` plante "invalid syntax" si la struct est complexe. Solution : Code node intermediaire qui prepare la string, puis HTTP node consomme `={{ $json.insert_body }}`.
-- **C1 (Docker bind mount)** : un `mv` d'un dossier monte ne propage PAS dans le container. `docker compose restart <service>` necessaire. Un simple ajout/modif de fichier OK sans restart.
+```
+/skill spark-frontend-patterns   # si on touche une page front (-app)
+/skill spark-stack-ops           # si on touche compose / Caddy / tunnel / secrets
+/skill spark-poc-method          # au cadrage d'un POC (fiche, PRD)
+/skill nocodb                    # reference API v3 + CLI nocodb.sh (a la demande)
+/skill n8n-node-configuration    # config d'un node precis (a la demande)
+```
+
+Les deux skills coeur portent la connaissance empirique cristallisee sur les POCs (les ~30 pieges N/W). Elles sont **versionnees dans le kit** (`spark-kit/templates/skills/`), donc presentes sur toute machine ou les skills Spark sont installees. La cheat-sheet ci-dessous est la version **toujours-en-contexte** (le 20% qui evite 80% de la douleur) ; les skills coeur en sont le detail complet a charger en debut de session. Installation : voir `skills/README.md`.
+
+### Cheat-sheet always-on — les ~15 pieges-rois
+
+Distillation toujours-en-contexte (le detail vit dans les skills coeur). Si un seul de ces points est ignore, c'est 20-60 min de debug.
+
+**NocoDB (data)**
+- **N3/N4** : insert avec FK ≠ creation du lien (juste un compteur fantome). Apres l'insert, POST `/api/v3/data/{base}/{table}/links/{link_field_id}/{record_id}` body `[{id:X}]`.
+- **N5/N21** : lecture Links = compteurs, pas d'objets. Resoudre via `/links?fields=Id,nom,...` (sans `?fields=`, seul le display field revient).
+- **N7** : `?where=(champ_link,eq,X)` ne filtre PAS (renvoie 0). Passer par le `/links` inverse, ou un Link `belongsTo` denormalise direct.
+- **N2** : bulk insert ET delete cap a **10**/call. Le delete >10 echoue **silencieusement** (0 supprime, aucune erreur). Batcher + verifier le retour.
+- **N25** : 2 Lookups dans le meme `?fields=` s'ecrasent (l'un revient `[null]`). Faire 1 fetch HTTP par Lookup.
+- **Wrapping** : reponse POST/PATCH = `{records:[{id,fields}]}`. En n8n : `{{ $json.records[0].id }}`, jamais `{{ $json.id }}`.
+
+**n8n (backend)**
+- **W3/W22** : jsonBody complexe inline → "invalid syntax" / "Unmatched expression brackets". Preparer la string dans un Code node "Prep", puis `jsonBody = ={{ $json.insert_body }}`.
+- **W9** : **jamais de branches paralleles** (fan-in non fiable en CE → `undefined`). Tout en chaine sequentielle.
+- **W10** : `throw new Error()` dans un Code node = HTTP 500. Un `return [{json:{_error}}]` CONTINUE la chaine et casse plus loin.
+- **W1** : webhook = `$json.body.X` (POST) / `$json.query.X` (GET). Pas de path params `:slug` (pris litteralement).
+- **W6/W8** : credential natif `nocoDbApiToken` (pas Header Auth) ; URL interne `http://nocodb:8080` / `http://n8n:5678` (jamais l'URL publique → 302 CF).
+
+**Front**
+- **F1** : ne JAMAIS nommer une fonction `confirm`/`alert`/`prompt`/`open`... (proprietes de `window`) → clic inerte, zero erreur console. Prefixer (`confirmX`).
+- **CF Access** : appeler les webhooks en **relatif** (`/webhook/api/...`), jamais l'URL absolue n8n (cross-origin → 302). Pas d'iframe NocoDB.
+
+**Caddy / Docker**
+- **NC_DB_JSON jamais NC_DB** : `NC_DB` (URL) URL-decode le password → auth fail en boucle si caractere special. Utiliser `NC_DB_JSON` (objet).
+- **C1/C5** : `mv` d'un dossier monte → `restart` necessaire ; nouveau volume bind → `up -d caddy` (coupe tous les fronts ~3-5s) ; ajout/modif de fichier → rien. **C6** : cache CF sur `.js` (~4h) → bumper `?v=N`.
 
 **Skipper la regle d'or coute 2-3h de bugs evitables par session** (vecu sur le premier gros build WMS v2). Cette section est en haut volontairement.
 
