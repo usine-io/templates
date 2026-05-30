@@ -9,13 +9,15 @@
 **Pour toute session qui touche NocoDB, n8n ou ecrans Caddy, charger immediatement** :
 
 ```
+/skill spark-nocodb-v3-patterns  # pieges data-layer NocoDB v3 (Links, Lookups, bulk) — Spark
+/skill spark-n8n-pseudo-api      # construire un endpoint webhook->NocoDB — Spark
 /skill nocodb                    # CLI nocodb.sh + reference API v3
 /skill n8n-workflow-patterns     # patterns architecturaux
 /skill n8n-expression-syntax     # $json.body.X, expressions {{}}
 /skill n8n-mcp-tools-expert      # formats nodeType, validation
 ```
 
-Et **lire la memoire `spark-pitfalls-catalog`** (~30 pieges cristallises sur les premiers POCs Spark). Si elle n'est pas presente sur la machine, voir `GETTING-STARTED.md` §3c pour la copier depuis un repo Spark existant.
+Les deux skills `spark-*` portent la connaissance empirique cristallisee sur les POCs (les ~30 pieges N/W). Elles sont **versionnees dans le kit** (`spark-kit/templates/skills/`), donc presentes sur toute machine ou les skills Spark sont installees — contrairement a la memoire `spark-pitfalls-catalog`, qui reste un complement per-machine (catalogue brut + sections C/F/P pas encore migrees en skill). Installation des skills : voir `skills/README.md`.
 
 **Les 3 pieges les plus couteux** (ceux qui reviennent meme apres avoir vu les autres) :
 - **N3 (NocoDB v3 Links)** : `{fields: {champ_link: {id: X}}}` a l'insert NE CREE PAS le lien. Le champ retourne juste un compteur. Solution : POST `/api/v3/data/{base}/{table}/links/{link_field_id}/{record_id}` body `[{id: X}]` separement apres l'insert.
