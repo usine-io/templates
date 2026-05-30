@@ -141,6 +141,10 @@ Supprimer l'application Access (dashboard) ou `terraform destroy` la ressource �
 - **Rate-limit ≠ CF Access.** Le rate-limit ralentit le bruteforce d'une page login ; il ne couvre pas les endpoints **sans** login (webhooks, écrans statiques) et n'arrête pas le credential-stuffing. CF Access supprime la surface. Les deux sont complémentaires.
 - **Ordre d'opérations sur une app *live*** : protéger un hostname coupe l'accès anonyme **immédiatement**. Le faire dans une fenêtre prévue + prévenir l'équipe. Provisionner les Service Tokens des machines **avant** de couper.
 - **Session duration** : trop courte = re-login fréquent ; 24h est un bon défaut interne.
+- **Scripts & fronts ne doivent pas pointer au mauvais endroit.** Une fois un vhost derrière Access, tout appelant non authentifié prend un `302` que `fetch`/`curl` ne suivent pas. Conventions à graver pour les développements futurs :
+  - **Fronts** → webhooks en **relatif** (`/webhook/...`), même origine que le front ; jamais l'URL absolue d'un autre sous-domaine. Pas d'iframe d'UI NocoDB (cf. `pieges-nocodb-n8n.md` N24).
+  - **Scripts/CLI host** → soit viser le **réseau Docker interne** (`http://service:port`, hors Access), soit envoyer un **Service Token** (`CF-Access-Client-Id`/`CF-Access-Client-Secret`) ou passer par `cloudflared access curl`. Exemple : le CLI NocoDB de la skill lit `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` depuis l'environnement.
+  - **MCP / outillage agent** : non concernés (réseau interne).
 
 ---
 
