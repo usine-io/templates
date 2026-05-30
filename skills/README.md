@@ -10,14 +10,14 @@ Skills Claude Code **propres au kit Spark** — la couche empirique et architect
 |-------|--------|-------------------------|
 | `spark-nocodb-v3-patterns` | data | modélisation, tables/champs NocoDB, workflows lisant/écrivant NocoDB, debug Links/Lookups/filtres |
 | `spark-n8n-pseudo-api` | backend | créer/éditer un endpoint webhook n8n adossé à NocoDB, debug jsonBody/IF/parallèle |
+| `spark-frontend-patterns` | frontend | créer/éditer une page front, câbler un front aux webhooks, debug bouton inerte / 302 CF / JS périmé |
+| `spark-stack-ops` | ops | compose/Caddyfile/volumes, tunnel, secrets, sizing Colima, diagnostic container |
 
-Contenu source : mémoire `spark-pitfalls-catalog` (pièges N1-N25, W1-W23, P1-P2) + `docs/pieges-nocodb-n8n.md`.
+Contenu source : mémoire `spark-pitfalls-catalog` (pièges N/W/C/F/P) + `docs/pieges-nocodb-n8n.md` + `docs/caddy.md` / `cloudflared.md` / `cf-access.md`.
 
-## Backlog (P2/P3, à créer)
+## Backlog (P3, à créer)
 
-- `spark-frontend-patterns` — fronts statiques (F1 noms réservés, skeleton+slot, login localStorage, download Blob, webhooks relatifs CF Access, anti-pattern iframe, cache CF `?v=N`).
-- `spark-stack-ops` — Caddy/Docker/Cloudflare/secrets (bind mounts C1-C6, `NC_DB_JSON`, Colima, tunnel pattern A).
-- `spark-poc-method` — discovery → fiche → PRD → script E2E ; prepare-then-connect ; référentiel-cible vs entité 1er ordre ; Form natif vs pseudo-API.
+- `spark-poc-method` — discovery → fiche → PRD → script E2E ; prepare-then-connect ; référentiel-cible vs entité 1er ordre ; Form natif vs pseudo-API ; MD frontmatter = source de vérité ; rebuild > patch.
 
 ## Installation
 
