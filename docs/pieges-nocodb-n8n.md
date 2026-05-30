@@ -11,7 +11,7 @@
 
 | Techno | Codes | Titres |
 |--------|-------|--------|
-| NocoDB v3 | N1–N23 | [voir §1](#1-nocodb-v3) |
+| NocoDB v3 | N1–N24 | [voir §1](#1-nocodb-v3) |
 | n8n | W1–W22 | [voir §2](#2-n8n) |
 | Docker / macOS | D1–D5 | [voir §3](#3-docker--macos) |
 | Caddy | C1–C5 | [voir §4](#4-caddy) |
@@ -245,6 +245,18 @@ Vérifier `records.length` côté Code node pour tester l'existence.
 **Solution** : utiliser `updateNode` avec `updates: {"parameters.assignments.assignments": [...]}` pour les paramètres de type array/objet.
 
 > Note : ce piège concerne techniquement le MCP n8n (pas NocoDB), mais est souvent rencontré lors d'opérations sur des nœuds NocoDB via le MCP.
+
+---
+
+### N24 — Ne pas embarquer l'UI NocoDB en `<iframe>` dans un front client
+
+**Symptôme** : un front embarque une vue ou un formulaire NocoDB via `<iframe src="https://<prefix>-db.<domain>/dashboard/#/nc/...">`. Ça « marche » en dev anonyme, puis casse dès qu'on sécurise : l'iframe affiche le login Cloudflare Access (ou reste blanche), ou est bloquée par `X-Frame-Options`/CSP.
+
+**Cause** : l'iframe pointe sur le sous-domaine NocoDB (`*-db`), distinct de celui du front (`*-app`) → cross-origin. (a) Sous CF Access, aucun cookie d'identité n'est propagé dans l'iframe et le login interactif ne peut pas s'y dérouler ; (b) les en-têtes anti-framing (`X-Frame-Options: SAMEORIGIN`, CSP `frame-ancestors`) bloquent l'embed cross-domaine.
+
+**Solution / convention framework** : **ne pas** embarquer l'UI NocoDB. Un front client consomme NocoDB uniquement via les **webhooks n8n same-origin** (`/webhook/...` servi par le reverse-proxy du front). Si un accès direct à NocoDB est réellement nécessaire, **lier** vers son sous-domaine (nouvel onglet), pas l'`<iframe>`. Bénéfice secondaire : on construit un écran métier maîtrisé plutôt que de ré-exposer l'UI brute.
+
+> Cristallisé en décommissionnant un POC qui utilisait ce pattern. Rappel : NocoDB n'est jamais la source de vérité métier — embarquer son UI n'apporte pas de valeur durable.
 
 ---
 
