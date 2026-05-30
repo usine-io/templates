@@ -1,0 +1,67 @@
+{
+  "_comment": "Schémas des objets NocoDB créés au step 02. IDs spécifiques au déploiement — à régénérer pour chaque site Spark.",
+  "workspace": {
+    "id": "<NOCODB_WORKSPACE_ID>",
+    "title": "Default Workspace"
+  },
+  "base": {
+    "id": "<NOCODB_BASE_ID_SMOKE>",
+    "title": "_t_smoke",
+    "type": "database",
+    "source_id": "<NOCODB_SOURCE_ID_SMOKE>"
+  },
+  "tables": [
+    {
+      "id": "<NOCODB_TABLE_ID_PINGS>",
+      "title": "_t_pings",
+      "table_name": "_t_pings",
+      "columns": [
+        {"title": "source", "uidt": "SingleLineText"},
+        {"title": "payload", "uidt": "LongText"}
+      ],
+      "auto_columns": ["Id", "CreatedAt", "UpdatedAt"]
+    },
+    {
+      "id": "<NOCODB_TABLE_ID_ECHOES>",
+      "title": "_t_echoes",
+      "table_name": "_t_echoes",
+      "columns": [
+        {"title": "ping_id", "uidt": "Number"},
+        {"title": "note", "uidt": "LongText"}
+      ],
+      "auto_columns": ["Id", "CreatedAt", "UpdatedAt"]
+    }
+  ],
+  "hooks": [
+    {
+      "id": "<NOCODB_HOOK_ID_PINGS_INSERT>",
+      "title": "_t_pings_after_insert",
+      "fk_model_id": "<NOCODB_TABLE_ID_PINGS>",
+      "event": "after",
+      "operation": ["insert"],
+      "version": "v3",
+      "active": true,
+      "notification": {
+        "type": "URL",
+        "payload": {
+          "method": "POST",
+          "path": "https://${SPARK_PREFIX}-n8n.${SPARK_DOMAIN}/webhook/_t_echo",
+          "body": "{{ json data }}"
+        }
+      }
+    }
+  ],
+  "_payload_format_v3_after_insert": {
+    "type": "records.after.insert",
+    "id": "<event-uuid>",
+    "base_id": "<base-id>",
+    "version": "v3",
+    "data": {
+      "table_id": "<table-id>",
+      "table_name": "_t_pings",
+      "rows": [
+        {"Id": "<int>", "CreatedAt": "<iso>", "UpdatedAt": null, "source": "<str>", "payload": "<str>"}
+      ]
+    }
+  }
+}

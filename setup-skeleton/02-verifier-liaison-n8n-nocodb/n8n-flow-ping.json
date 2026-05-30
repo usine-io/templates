@@ -1,0 +1,50 @@
+{
+  "name": "_t_ping",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "_t_ping",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "node-webhook-ping",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "_t_ping"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://__NOCODB_HOST__/api/v2/tables/__PINGS_TABLE_ID__/records",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "id": "node-http-ping",
+      "name": "POST NocoDB _t_pings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "__NOCODB_CRED_ID__",
+          "name": "NocoDB API _t_smoke"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "POST NocoDB _t_pings", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

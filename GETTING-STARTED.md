@@ -52,17 +52,29 @@ ls ~/.claude/skills/nocodb/   # doit contenir SKILL.md et scripts/
 
 ### 2b — Skills n8n (7 skills)
 
-Source : https://github.com/czlonkowski/n8n-skills
+Les 7 skills n8n font partie de l'ecosysteme officiel Claude Code. Verifier d'abord si elles sont deja presentes (machines equipees recemment) :
 
 ```bash
-# Methode recommandee (depuis Claude Code) :
-/plugin install czlonkowski/n8n-skills
-
-# Alternative manuelle :
-git clone https://github.com/czlonkowski/n8n-skills.git /tmp/n8n-skills
-cp -r /tmp/n8n-skills/skills/* ~/.claude/skills/
-rm -rf /tmp/n8n-skills
+ls ~/.claude/skills/ | grep ^n8n
 ```
+
+Si absentes, les installer via le marketplace officiel :
+
+```bash
+# Methode recommandee :
+npx @anthropic-ai/claude-code skills add n8n-workflow-patterns
+npx @anthropic-ai/claude-code skills add n8n-expression-syntax
+npx @anthropic-ai/claude-code skills add n8n-code-javascript
+npx @anthropic-ai/claude-code skills add n8n-code-python
+npx @anthropic-ai/claude-code skills add n8n-node-configuration
+npx @anthropic-ai/claude-code skills add n8n-validation-expert
+npx @anthropic-ai/claude-code skills add n8n-mcp-tools-expert
+
+# Alternative (Claude Code plugin marketplace) :
+# Dans une session Claude Code : /plugin marketplace add <skill-name>
+```
+
+> Note : les references a `czlonkowski/n8n-skills` (dépôt tiers) sont obsoletes — utiliser l'ecosysteme officiel ci-dessus.
 
 Verification — doit lister **7 skills** :
 ```bash
@@ -272,6 +284,7 @@ Ce guide est volontairement **non scripte** (pas un `install.sh`). Raisons :
 
 Evolutions envisagees :
 - Auto-creation du credentiel n8n via `n8n_manage_credentials` MCP (si l'API admin se stabilise)
+- Templating `cookiecutter` pour `gh repo create` (au lieu de `--template`)
 - Skill `spark-bootstrap` qui execute ce guide automatiquement (futur)
 - Memoire `spark-pitfalls-catalog` packagee comme skill installable au lieu d'une copie manuelle §3c
 

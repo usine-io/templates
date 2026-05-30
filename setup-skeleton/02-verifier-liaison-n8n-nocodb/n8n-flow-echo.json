@@ -1,0 +1,73 @@
+{
+  "name": "_t_echo",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "_t_echo",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "node-webhook-echo",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "_t_echo"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://__NOCODB_HOST__/api/v2/tables/__PINGS_TABLE_ID__/records?where=(Id,eq,{{ $json.body.data.rows[0].Id }})&limit=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "node-http-get-ping",
+      "name": "GET ping from NocoDB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "__NOCODB_CRED_ID__",
+          "name": "NocoDB API _t_smoke"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://__NOCODB_HOST__/api/v2/tables/__ECHOES_TABLE_ID__/records",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ping_id: $json.list[0].Id, note: 'echoed ping #' + $json.list[0].Id + ' (source=' + $json.list[0].source + ') at ' + $now.toISO() }) }}",
+        "options": {}
+      },
+      "id": "node-http-post-echo",
+      "name": "POST echo in NocoDB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "__NOCODB_CRED_ID__",
+          "name": "NocoDB API _t_smoke"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "GET ping from NocoDB", "type": "main", "index": 0 }]]
+    },
+    "GET ping from NocoDB": {
+      "main": [[{ "node": "POST echo in NocoDB", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
