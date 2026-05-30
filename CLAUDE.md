@@ -95,6 +95,8 @@ Caddy a `auto_https off` — c'est Cloudflare qui gere le TLS. Caddy injecte `X-
 
 Deux outillages distincts. Pour **n8n** : skills (reference) + MCP (action live). Pour **NocoDB** : skill (reference) + **CLI v3** (action live, pas de MCP).
 
+Les skills se repartissent en **deux familles** : le **socle generique tiers** (`nocodb` + 7 `n8n-*` — reference des API et des nodes, detaille ci-dessous) et la **couche Spark** (`spark-*` — pieges empiriques + patterns d'assemblage du combo NocoDB/n8n/Caddy). Les 2 skills coeur `spark-nocodb-v3-patterns` + `spark-n8n-pseudo-api` sont a charger **avant d'ecrire** (cf. Regle d'or) ; `spark-frontend-patterns` / `spark-stack-ops` / `spark-poc-method` se chargent par trigger. Source versionnee dans `spark-kit/templates/skills/` (cf. son `README.md`).
+
 ### n8n
 
 **Skills** (7 skills `n8n-*`) :
