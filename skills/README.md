@@ -4,7 +4,25 @@ Skills Claude Code **propres au kit Spark** — la couche empirique et architect
 
 > Pourquoi des skills et pas seulement de la doc/mémoire : une skill se charge **par trigger** pendant le build, est **versionnée dans le kit** (donc transférable à tout nouveau site), là où la mémoire `spark-pitfalls-catalog` reste per-machine et les `docs/*.md` ne s'ouvrent pas spontanément.
 
-## Disponibles
+La stack agent Spark s'appuie sur **deux familles** de skills, complémentaires :
+le **socle générique tiers** (référence des API n8n / NocoDB) et la **couche Spark** (pièges empiriques + patterns d'assemblage du combo). Les deux doivent être installées sur le poste.
+
+## 1. Socle générique (skills tierces — `n8n-*` + `nocodb`)
+
+Référence des API et des nodes, **génériques** (pas propres à Spark). Installées via les packages amont — voir « Installation » §a.
+
+| Skill | Rôle |
+|-------|------|
+| `nocodb` | Référence API NocoDB v3 (data CRUD, meta, links, filters, sorts, attachments) **+ CLI `nocodb.sh`** (canal d'action NocoDB) |
+| `n8n-workflow-patterns` | Patterns architecturaux de workflow (webhook, CRUD, scheduling, AI agents) |
+| `n8n-node-configuration` | Configuration des nodes par type et opération |
+| `n8n-expression-syntax` | Syntaxe `{{ }}`, `$json`, `$node`, troubleshooting expressions |
+| `n8n-code-javascript` | Code nodes JS (`$input`, `$helpers`, `DateTime`) |
+| `n8n-code-python` | Code nodes Python (`_input`, `_json`, limitations) |
+| `n8n-validation-expert` | Interprétation des erreurs/warnings de validation |
+| `n8n-mcp-tools-expert` | Guide d'utilisation des outils MCP n8n |
+
+## 2. Couche Spark (ce répertoire)
 
 | Skill | Couche | Quand elle se déclenche |
 |-------|--------|-------------------------|
@@ -16,19 +34,30 @@ Skills Claude Code **propres au kit Spark** — la couche empirique et architect
 
 Contenu source : mémoire `spark-pitfalls-catalog` (pièges N/W/C/F/P) + `LESSONS-LEARNED` (bilans PRD) + feedback memories + `docs/*.md`.
 
+**Articulation** : le socle dit *comment marche l'API/le node* ; la couche Spark dit *quel piège t'attend et comment assembler*. En build, charger d'abord les 2 skills Spark P1 (cf. Règle d'or du `CLAUDE.md`), elles renvoient vers le socle au besoin.
+
 ## Backlog
 
 Les 5 skills proposées sont livrées. Pistes d'enrichissement futur : `spark-zpl-labels` (gabarits ZPL + impression), `spark-external-connectors` (PhoneCheck/NSYS/Utopya une fois les connecteurs stabilisés).
 
 ## Installation
 
-Les skills sont globales (`~/.claude/skills/`, une fois par poste). Copier les dossiers `spark-*` de ce répertoire vers `~/.claude/skills/` :
+Les skills sont globales (`~/.claude/skills/`, une fois par poste).
+
+**a. Socle générique** (packages amont) :
+
+```bash
+npx @anthropic-ai/claude-code skills add nocodb/agent-skills
+npx @anthropic-ai/claude-code skills add n8n/agent-skills
+```
+
+**b. Couche Spark** (ce répertoire) :
 
 ```bash
 cp -R spark-* ~/.claude/skills/
 ```
 
-Vérifier : au démarrage d'une session Claude Code dans un repo Spark, `/skill spark-nocodb-v3-patterns` doit être listée.
+Vérifier : au démarrage d'une session Claude Code dans un repo Spark, `/skill spark-nocodb-v3-patterns` et `/skill nocodb` doivent toutes deux être listées.
 
 ## Convention
 
