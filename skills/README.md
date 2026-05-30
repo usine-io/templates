@@ -12,12 +12,13 @@ Skills Claude Code **propres au kit Spark** — la couche empirique et architect
 | `spark-n8n-pseudo-api` | backend | créer/éditer un endpoint webhook n8n adossé à NocoDB, debug jsonBody/IF/parallèle |
 | `spark-frontend-patterns` | frontend | créer/éditer une page front, câbler un front aux webhooks, debug bouton inerte / 302 CF / JS périmé |
 | `spark-stack-ops` | ops | compose/Caddyfile/volumes, tunnel, secrets, sizing Colima, diagnostic container |
+| `spark-poc-method` | méthode | cadrer un POC, écrire une fiche/PRD, choisir une approche d'intégration ou Form vs pseudo-API |
 
-Contenu source : mémoire `spark-pitfalls-catalog` (pièges N/W/C/F/P) + `docs/pieges-nocodb-n8n.md` + `docs/caddy.md` / `cloudflared.md` / `cf-access.md`.
+Contenu source : mémoire `spark-pitfalls-catalog` (pièges N/W/C/F/P) + `LESSONS-LEARNED` (bilans PRD) + feedback memories + `docs/*.md`.
 
-## Backlog (P3, à créer)
+## Backlog
 
-- `spark-poc-method` — discovery → fiche → PRD → script E2E ; prepare-then-connect ; référentiel-cible vs entité 1er ordre ; Form natif vs pseudo-API ; MD frontmatter = source de vérité ; rebuild > patch.
+Les 5 skills proposées sont livrées. Pistes d'enrichissement futur : `spark-zpl-labels` (gabarits ZPL + impression), `spark-external-connectors` (PhoneCheck/NSYS/Utopya une fois les connecteurs stabilisés).
 
 ## Installation
 
