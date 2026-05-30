@@ -161,6 +161,20 @@ Apres le premier acces aux apps :
 - Les secrets metier (API keys, tokens des logiciels de l'entreprise) vont dans **n8n > Settings > Credentials**, chiffres par `N8N_ENCRYPTION_KEY`.
 - Le `.env` ne contient que les secrets d'infrastructure de la stack.
 
+### Securite de l'exposition externe
+
+Tout site Spark expose 3 sous-domaines via Cloudflare Tunnel (`<prefix>-n8n`, `<prefix>-app`, `<prefix>-db`). Le standard de durcissement par defaut :
+
+- **Cloudflare Access devant tout vhost UI / app / webhook** (pattern Entra ID M365 ou Google OAuth, Free tier jusqu'a 50 users). Aucune page login native n8n/NocoDB ne doit etre joignable directement depuis Internet.
+- **Headers de securite Caddy** (HSTS, X-Frame-Options, etc.) sur **chaque** vhost — bloc copiable dans `spark-kit/SECURITY.md` §2.2.
+- **CORS NocoDB** restreint au sous-domaine `-app` (NocoDB renvoie `*` par defaut, l'override est cote Caddy).
+- **Caddy bind `127.0.0.1`** uniquement (pas `0.0.0.0`) pour eviter l'exposition LAN.
+- **Pas de Uptime Kuma dans le compose client** — monitoring vit sur un master Spark separe.
+
+Hygiene speciale : `CF_API_TOKEN` (scope DNS), `N8N_ENCRYPTION_KEY` et `NOCODB_API_TOKEN` sont des secrets de tres haut privilege. Ne **jamais** afficher leur valeur en sortie de tool/message. Cf. `spark-kit/SECURITY.md` §5.
+
+Detail complet, modele de menace, recettes copy-paste et procedure d'audit recurrent : **`spark-kit/SECURITY.md`**.
+
 ### Workflows n8n
 
 - Un workflow = une responsabilite claire.
@@ -216,6 +230,18 @@ La conf URL `NC_DB="pg://...&p=XXX&d=..."` URL-decode le password. Si le passwor
 ### Tunnel Cloudflare — pattern A
 
 Le YAML cloudflared vit cote hote (`~/.cloudflared/config-*.yml`), edite par `scripts/tunnel-up.sh` via blocs marques `# >>> spark-begin` / `# <<< spark-end`. Ne pas editer manuellement les blocs marques.
+
+### Endpoints derriere CF Access — ne pas pointer un script au mauvais endroit
+
+Les 3 vhosts publics passent derriere Cloudflare Access (cf. "Securite de l'exposition externe"). Un appel anonyme recoit un `302` vers le login CF. Donc, pour tout nouveau front ou script :
+
+- **Fronts** : appeler les webhooks en **relatif** (`/webhook/api/...`), jamais l'URL absolue `https://<prefix>-n8n.<domain>/...`. Front + API sont same-origin sur `<prefix>-app` → le cookie CF se propage aux XHR. Hardcoder l'hote n8n comme base d'API d'un front est un anti-pattern. Pas d'iframe NocoDB non plus.
+- **Scripts / tooling host** (validation, cron, CLI) qui visent un vhost public → ils prendront un `302` sans auth. Trois voies, par ordre de preference :
+  1. **Caddy local + Host header** (prefere sur le Mac hote) : `http://127.0.0.1:<port-http-local>` + en-tete `Host: <prefix>-<svc>.<domain>`. Reste en local, ne traverse jamais Cloudflare → pas de token. `nocodb.sh` : passer le header via `NOCODB_HOST_HEADER`.
+  2. **Reseau Docker interne** (si le script tourne dans la stack) : viser `http://n8n:5678` / `http://nocodb:8080`.
+  3. **Service Token CF** (seulement off-host / audit du 302 public) : en-tetes `CF-Access-Client-Id` / `CF-Access-Client-Secret`.
+- **MCP n8n** : non concerne (reseau Docker interne).
+- Runbook complet (creation app Access, Service Tokens, verif) : `docs/cf-access.md`.
 
 ### NocoDB v3 — vues custom = Enterprise
 
