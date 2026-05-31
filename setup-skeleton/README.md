@@ -10,7 +10,7 @@ Un déploiement Spark se lit comme **trois briques empilables**, pas un monolith
 
 1. **Solution technique** (cœur, obligatoire) — n8n + NocoDB + Postgres + Caddy + tunnel Cloudflare. ~30 min, donne une stack qui tourne et est joignable en HTTPS. C'est le contenu du README `spark-kit` (méta) + steps 00→02 ci-dessous.
 2. **Recommandations de sécurité** (optionnel, **recommandé avant toute donnée réelle**) — Cloudflare Access devant les vhosts, headers Caddy, CORS NocoDB. Ferme l'accès anonyme aux UIs/webhooks exposés. Step 03 + `SECURITY.md` (méta).
-3. **Brique de sauvegarde déployable** (optionnel, recommandé) — backup 3-2-1 scripté (pg_dumpall + tar volumes + drill de restore + offsite B2). Step 04.
+3. **Brique de sauvegarde déployable** (optionnel, recommandé) — backup 3-2-1 scripté (pg_dumpall + tar volumes + drill de restore + offsite via rclone, provider au choix). Step 04.
 
 > La brique 1 seule = un prototype joignable. Les briques 2 et 3 la rendent **exploitable en production**. Elles sont indépendantes : on peut poser la sauvegarde sans la sécurité, ou l'inverse.
 
@@ -27,7 +27,7 @@ Un déploiement Spark se lit comme **trois briques empilables**, pas un monolith
 | # | Brique | Statut conseillé | ⏱️ | Acteur | Options / comptes externes à prendre |
 |---|---|---|---|---|---|
 | 03 | [Sécurité / authentification (CF Access)](03-securite-cf-access/) | **recommandé en prod** | ~60–90 min | humain (clics Cloudflare + Caddyfile) + Claude (vérif/audit) | **Cloudflare Zero Trust** activé (Free, ≤50 users) ; un **IdP** (Entra ID / Google) **ou** One-time PIN ; **Service Token** par machine qui doit franchir Access |
-| 04 | [Stratégie de backup 3-2-1](04-strategie-backup-3-2-1/) | recommandé | ~45–60 min local (+~25 min si offsite) | Claude (scripts + cron) + humain (compte B2) | **compte Backblaze B2** + bucket + key pair (uniquement pour la couche offsite) |
+| 04 | [Stratégie de backup 3-2-1](04-strategie-backup-3-2-1/) | recommandé | ~45–60 min local (+~25 min si offsite) | Claude (scripts + cron) + humain (remote offsite) | un **remote rclone** au choix (Backblaze B2, S3/MinIO, Google Drive, SFTP…) — uniquement pour la couche offsite |
 | 05 | [Versionning des workflows n8n](05-versionning-workflows-n8n/) | confort | ~20 min | Claude (script export+commit) | — |
 
 > Les ⏱️ sont des ordres de grandeur « première fois, à la main » (dashboard, pas IaC). La 2e fois va plus vite. Le détail du chiffrage est dans le README de chaque step.

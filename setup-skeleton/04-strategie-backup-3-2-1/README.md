@@ -1,7 +1,7 @@
 # Step 04 — Stratégie de backup 3-2-1
 
 > ✅ **Couches locales + offsite livrées** dans `scripts/` (génériques, à copier dans `infra/scripts/backup/` du repo client). Drill de restore = critère de validation.
-> ⏳ **Reste côté client** : compte/bucket B2 + creds dans `.env` (le script `rclone-push.sh` est prêt), activer le cron/launchd, brancher la notif si la drill échoue.
+> ⏳ **Reste côté client** : configurer un remote rclone (provider au choix) + `SPARK_OFFSITE_REMOTE` dans `.env` (le script `rclone-push.sh` est prêt), activer le cron/launchd, brancher la notif si la drill échoue.
 
 ## Pourquoi cette étape
 
@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | PostgreSQL | `pg_dumpall` → `.sql.gz` | 6h | 7j local | ✅ |
 | Volumes Docker | `tar` des volumes nommés | quotidien | 7j local | ✅ |
-| Offsite | `rclone copy` → Backblaze B2 | quotidien | 30j | ✅ (creds client) |
+| Offsite | `rclone copy` → remote au choix (B2/S3/Drive/SFTP…) | quotidien | 30j | ✅ (remote client) |
 | USB | copie locale (optionnel) | hebdo | 4 semaines | ⏳ |
 
 Un dump est inutile s'il n'est pas restaurable → la **drill de restore** est le critère de validation, et elle est livrée.
@@ -35,6 +35,8 @@ Config par variables d'env (toutes optionnelles) :
 | `SPARK_BACKUP_DIR` | `$HOME/spark-backups` | racine des backups (hors-repo) |
 | `SPARK_BACKUP_RETENTION_DAYS` | `7` | rétention locale |
 | `SPARK_BACKUP_VOLUME_EXCLUDE` | `postgres_data caddy_logs` | volumes non tarés |
+| `SPARK_OFFSITE_REMOTE` | *(vide → offsite inerte)* | remote rclone parent, ex `b2:bucket` / `s3:bucket/prefix` / `gdrive:spark` |
+| `SPARK_OFFSITE_RETENTION_DAYS` | `30` | rétention offsite |
 
 ## Scripts livrés (`scripts/`)
 
@@ -43,15 +45,23 @@ Config par variables d'env (toutes optionnelles) :
 - `volumes-tar.sh` ✅ — tar.gz de chaque volume nommé. Exclut par défaut `postgres_data` (couvert logiquement par le dump ; un tar à chaud serait incohérent) et `caddy_logs` (régénérable). **`nocodb_data` est tarré** : NocoDB met ses métadonnées dans PG mais ses **pièces jointes** dans ce volume.
 - `restore-drill.sh` ✅ — monte un Postgres jetable, restaure le dernier dump, compte tables + workflows, détruit le conteneur. **Non-destructif** (zéro write sur la prod).
 - `install-launchd.sh` ✅ (macOS) — écrit 3 LaunchAgents (`com.spark.<projet>.{pg-dump,volumes-tar,restore-drill}`). N'active rien sans `--load`. Sur Linux : transposer en cron/systemd timer.
-- `rclone-push.sh` ✅ — offsite B2. **`rclone copy`** (additif), PAS `sync` : sync mirroir-erait le pruning local et casserait la rétention offsite longue. Rétention B2 gérée à part par `rclone delete --min-age` + `cleanup`. Creds lus dans `.env` via variables d'env rclone (`RCLONE_CONFIG_*`) — rien écrit dans `~/.config/rclone`. Inerte tant que `B2_*` absent de `.env`. Config : `B2_ACCOUNT_ID`/`B2_APPLICATION_KEY`/`B2_BUCKET`, `B2_RETENTION_DAYS` (défaut 30). Supporte `--dry-run`.
+- `rclone-push.sh` ✅ — offsite **agnostique au provider** (n'importe quel backend rclone : B2, S3/MinIO, Google Drive, OneDrive, SFTP, WebDAV…). **`rclone copy`** (additif), PAS `sync` : sync mirroir-erait le pruning local et casserait la rétention offsite longue. Rétention gérée à part par `rclone delete --min-age` (+ `cleanup` best-effort pour backends versionnés type B2). Cible = `SPARK_OFFSITE_REMOTE` ; auth au choix via `rclone config` **ou** `RCLONE_CONFIG_*` dans `.env` (le script les charge). **Inerte** tant que `SPARK_OFFSITE_REMOTE` absent. `SPARK_OFFSITE_RETENTION_DAYS` (défaut 30). Supporte `--dry-run`.
 - `usb-copy.sh` ⏳ (optionnel) — rsync vers `/Volumes/SPARK_BACKUP` si monté.
 
 > ⚠️ Le tableau §2.3 du wiki dit « rclone **sync** » : c'est une approximation. On livre un **copy** + delete-by-age, sinon la rétention offsite longue (30j) est incompatible avec le pruning local court (7j).
 
-## Phase humaine — offsite B2 (préalable à `rclone-push.sh`)
-- [ ] Créer compte B2 (https://www.backblaze.com)
-- [ ] Créer bucket et key pair, scope write-only
-- [ ] Coller `B2_ACCOUNT_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET` dans `infra/.env`
+## Phase humaine — offsite, provider au choix (préalable à `rclone-push.sh`)
+
+Choisir un provider, exposer un **remote rclone**, pointer le script dessus. Auth au choix :
+- **`rclone config`** (interactif) → remote nommé dans `~/.config/rclone/rclone.conf`. Recommandé pour Google Drive / OneDrive / Dropbox (OAuth).
+- **`RCLONE_CONFIG_<NOM>_*`** dans `infra/.env` → créds gardés avec le reste, rien dans `~/.config/rclone`. Pratique pour B2 / S3.
+
+Puis `SPARK_OFFSITE_REMOTE=<remote>:<bucket-ou-dossier>` dans `infra/.env` (le script ajoute `/<projet>`). Exemples :
+- **Backblaze B2** : `RCLONE_CONFIG_OFF_TYPE=b2` + `_ACCOUNT=<keyID>` + `_KEY=<appKey>` → `SPARK_OFFSITE_REMOTE=off:mon-bucket`
+- **S3 / MinIO** : `RCLONE_CONFIG_OFF_TYPE=s3` (+ `_PROVIDER`/`_ACCESS_KEY_ID`/`_SECRET_ACCESS_KEY`) → `SPARK_OFFSITE_REMOTE=off:mon-bucket/backups`
+- **Drive / OneDrive / SFTP / …** : `rclone config` puis `SPARK_OFFSITE_REMOTE=<nom>:spark`
+
+> Chaque installateur fait « à sa sauce » — le script ne présuppose aucun provider.
 
 ## Planification (cron launchd, livré, à activer côté client)
 `install-launchd.sh` écrit dans `~/Library/LaunchAgents` :
@@ -72,10 +82,10 @@ Activer : `bash infra/scripts/backup/install-launchd.sh --load`. *(TODO: notifie
 - `pg_dumpall` plutôt que `pg_dump` : on veut TOUS les rôles + les 3 bases (postgres, n8n, nocodb) en un fichier restaurable d'un coup.
 - Résolution par **labels Compose**, pas par nom de conteneur : `${PREFIX}-postgres-1` vs `${PREFIX}_postgres_1` dépend de la version compose → fragile. Le label est stable.
 - La drill de restore est **le critère de validation** — un backup non-testé n'est pas un backup.
-- rclone gère B2 nativement (config interactive `rclone config`, ou via env vars).
+- rclone gère ~70 backends de façon uniforme (B2, S3, Drive, SFTP…) → on reste **agnostique**, l'installateur choisit son provider (config interactive ou `RCLONE_CONFIG_*`).
 
 ## Sources
 
 - `wiki/topics/architecture-technique.md` §2.3 (table des couches)
-- Doc rclone B2 : https://rclone.org/b2/
+- Backends rclone (liste + config par provider) : https://rclone.org/overview/
 - Best practices PG backup : `pg_dumpall` vs `pg_basebackup` (on reste sur pg_dumpall pour simplicité, basebackup pour PITR un autre jour)
