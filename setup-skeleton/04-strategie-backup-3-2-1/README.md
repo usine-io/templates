@@ -1,7 +1,7 @@
 # Step 04 — Stratégie de backup 3-2-1
 
-> ✅ **Couches locales livrées** dans `scripts/` (génériques, à copier dans `infra/scripts/backup/` du repo client). Drill de restore = critère de validation.
-> ⏳ **Reste** : offsite Backblaze B2 (`rclone-push.sh`) + planification (cron/launchd à activer côté client).
+> ✅ **Couches locales + offsite livrées** dans `scripts/` (génériques, à copier dans `infra/scripts/backup/` du repo client). Drill de restore = critère de validation.
+> ⏳ **Reste côté client** : compte/bucket B2 + creds dans `.env` (le script `rclone-push.sh` est prêt), activer le cron/launchd, brancher la notif si la drill échoue.
 
 ## Pourquoi cette étape
 
@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | PostgreSQL | `pg_dumpall` → `.sql.gz` | 6h | 7j local | ✅ |
 | Volumes Docker | `tar` des volumes nommés | quotidien | 7j local | ✅ |
-| Offsite | `rclone sync` → Backblaze B2 | quotidien | 30j | ⏳ |
+| Offsite | `rclone copy` → Backblaze B2 | quotidien | 30j | ✅ (creds client) |
 | USB | copie locale (optionnel) | hebdo | 4 semaines | ⏳ |
 
 Un dump est inutile s'il n'est pas restaurable → la **drill de restore** est le critère de validation, et elle est livrée.
@@ -43,8 +43,10 @@ Config par variables d'env (toutes optionnelles) :
 - `volumes-tar.sh` ✅ — tar.gz de chaque volume nommé. Exclut par défaut `postgres_data` (couvert logiquement par le dump ; un tar à chaud serait incohérent) et `caddy_logs` (régénérable). **`nocodb_data` est tarré** : NocoDB met ses métadonnées dans PG mais ses **pièces jointes** dans ce volume.
 - `restore-drill.sh` ✅ — monte un Postgres jetable, restaure le dernier dump, compte tables + workflows, détruit le conteneur. **Non-destructif** (zéro write sur la prod).
 - `install-launchd.sh` ✅ (macOS) — écrit 3 LaunchAgents (`com.spark.<projet>.{pg-dump,volumes-tar,restore-drill}`). N'active rien sans `--load`. Sur Linux : transposer en cron/systemd timer.
-- `rclone-push.sh` ⏳ — `rclone sync` → B2, rétention 30j. **À livrer** (besoin compte B2).
+- `rclone-push.sh` ✅ — offsite B2. **`rclone copy`** (additif), PAS `sync` : sync mirroir-erait le pruning local et casserait la rétention offsite longue. Rétention B2 gérée à part par `rclone delete --min-age` + `cleanup`. Creds lus dans `.env` via variables d'env rclone (`RCLONE_CONFIG_*`) — rien écrit dans `~/.config/rclone`. Inerte tant que `B2_*` absent de `.env`. Config : `B2_ACCOUNT_ID`/`B2_APPLICATION_KEY`/`B2_BUCKET`, `B2_RETENTION_DAYS` (défaut 30). Supporte `--dry-run`.
 - `usb-copy.sh` ⏳ (optionnel) — rsync vers `/Volumes/SPARK_BACKUP` si monté.
+
+> ⚠️ Le tableau §2.3 du wiki dit « rclone **sync** » : c'est une approximation. On livre un **copy** + delete-by-age, sinon la rétention offsite longue (30j) est incompatible avec le pruning local court (7j).
 
 ## Phase humaine — offsite B2 (préalable à `rclone-push.sh`)
 - [ ] Créer compte B2 (https://www.backblaze.com)
