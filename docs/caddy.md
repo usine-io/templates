@@ -164,13 +164,13 @@ Aucun secret côté Caddy : c'est un proxy pur, pas d'auth, pas de TLS. La prote
 
 ```bash
 # Démarrage (avec le reste de la stack)
-docker compose -p acme up -d caddy
+docker-compose -p acme up -d caddy
 
 # Reload après édition du Caddyfile (sans downtime)
-docker compose -p acme exec caddy caddy reload --config /etc/caddy/Caddyfile
+docker-compose -p acme exec caddy caddy reload --config /etc/caddy/Caddyfile
 
 # Hard restart (si reload ne suffit pas — rare)
-docker compose -p acme restart caddy
+docker-compose -p acme restart caddy
 
 # Diagnostic
 docker logs acme-caddy-1 --tail 50
@@ -183,7 +183,7 @@ curl -sI http://localhost:18080/ -H "Host: acme-app.<domain>"   # depuis le Mac
 
 Si on **déplace** ou renomme un dossier monté en bind (ex. `mv front-wms front-wms-v1-archive && cp -r nouvelle-version front-wms`), **Caddy continue à servir l'ancien inode**. Le container voit le nouveau dossier mais le file_server cache des références obsolètes.
 
-**Fix** : `docker compose -p acme restart caddy` après tout `mv` sur un bind mount. Voir piège C1 du `spark-pitfalls-catalog`.
+**Fix** : `docker-compose -p acme restart caddy` après tout `mv` sur un bind mount. Voir piège C1 du `spark-pitfalls-catalog`.
 
 ---
 
@@ -207,6 +207,6 @@ Si on **déplace** ou renomme un dossier monté en bind (ex. `mv front-wms front
    }
    ```
 2. **`tunnel-up.sh`** : ajouter `acme-flow.<domain>` à la liste `HOSTS`.
-3. **Re-run** : `tunnel-up.sh` (crée le CNAME) puis `docker compose exec caddy caddy reload`.
+3. **Re-run** : `tunnel-up.sh` (crée le CNAME) puis `docker-compose exec caddy caddy reload`.
 
 Aucun cert à gérer, aucune route à déclarer ailleurs.

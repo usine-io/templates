@@ -38,7 +38,7 @@ Ces ressources vont vous permettre de vous offrir un guide à partager avec le L
 
 | Ressource | Ce qu'on y trouve |
 |-----------|-------------------|
-| [**GETTING-STARTED.md**](GETTING-STARTED.md) | Premier boot d'un repo client : skills Claude (`/skill nocodb`, `/skill n8n-*`), .env, premier `docker compose up`, credentials n8n, verifs |
+| [**GETTING-STARTED.md**](GETTING-STARTED.md) | Premier boot d'un repo client : skills Claude (`/skill nocodb`, `/skill n8n-*`), .env, premier `docker-compose up`, credentials n8n, verifs |
 | [**crash-test/**](crash-test/) | Smoke test des 3 routes n8n-NocoDB, puis premier use case guide par `/plan` |
 | [**BIENVENUE.md**](BIENVENUE.md) | Guide du builder : ou travailler, comment utiliser Claude Code, tips & tricks, pieges courants |
 | [**CLAUDE.md**](CLAUDE.md) | Briefing agent — le fichier que Claude Code lit automatiquement. A copier et adapter dans chaque repo entreprise |

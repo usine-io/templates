@@ -147,8 +147,8 @@ Variables critiques (voir `infra/.env.example` pour la liste complete) :
 
 ```bash
 cd infra/
-docker compose up -d
-docker compose -p <prefix> ps        # tous services en "Up"
+docker-compose up -d
+docker-compose -p <prefix> ps        # tous services en "Up"
 ```
 
 Verifications tunnel public :

@@ -12,7 +12,7 @@ Spark implique 4 niveaux d'intervention. Dans une petite structure, une seule pe
 
 | Role | Ce qu'il fait | Ce qu'il touche | Documentation |
 |------|--------------|-----------------|---------------|
-| **Admin / infra** | Installe le Mac Mini, Docker, Colima, le tunnel Cloudflare. Gere le `.env`, les mises a jour, les backups. | Terminal, `docker compose`, fichiers de config, tunnel | [README spark-kit](https://github.com/spark-kit/spark-kit) (installation) |
+| **Admin / infra** | Installe le Mac Mini, Docker, Colima, le tunnel Cloudflare. Gere le `.env`, les mises a jour, les backups. | Terminal, `docker-compose`, fichiers de config, tunnel | [README spark-kit](https://github.com/spark-kit/spark-kit) (installation) |
 | **Gestionnaire de credentials** | Cree les comptes dans n8n/NocoDB. Configure les connexions aux logiciels metier (API keys, OAuth2) dans le coffre-fort n8n. | `<prefix>-n8n.<domain>` > Settings > Credentials | [§ Connecter une API externe](#connecter-une-api-externe) |
 | **Builder** | Concoit et construit les POCs avec Claude Code : tables NocoDB, workflows n8n, pages HTML. Ecrit les PRD, documente les lecons. | Claude Code + MCP, `<prefix>-n8n.<domain>`, `<prefix>-db.<domain>`, repo Git | Ce guide + [crash-test](crash-test/) |
 | **Utilisateur final** | Utilise les outils construits par le builder : formulaires, dashboards, vues. Ne touche jamais a n8n. | `<prefix>-app.<domain>`, `<prefix>-db.<domain>` (vues/formulaires uniquement) | *(a creer : guide utilisateur)* |
@@ -99,7 +99,7 @@ Claude va proposer une architecture (tables, endpoints, pages), tu valides ou tu
 - **NocoDB** : pas de MCP — Claude passe par le CLI `nocodb.sh` de la skill (API v3, PAT). Raison : l'ecosysteme MCP NocoDB n'est pas stable contre les versions recentes — on documente uniquement ce qui marche aujourd'hui. Cf. INC-2026-05-19 dans `spark-kit/INCIDENTS.md`.
 
 Si Claude dit "je n'ai pas acces" :
-1. Pour n8n : `.mcp.json` existe a la racine du repo, la stack tourne (`docker compose ps`), `N8N_API_KEY` est dans `.env`.
+1. Pour n8n : `.mcp.json` existe a la racine du repo, la stack tourne (`docker-compose ps`), `N8N_API_KEY` est dans `.env`.
 2. Pour NocoDB : la skill `nocodb` est installee (`~/.claude/skills/nocodb/`), `NOCODB_API_TOKEN` est dans `.env` et le PAT a ete copie immediatement apres la creation dans la modale (NocoDB ne le re-affiche jamais).
 
 ### Charge les skills avant de configurer

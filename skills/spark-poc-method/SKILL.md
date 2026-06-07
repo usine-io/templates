@@ -99,6 +99,6 @@ Pour les **PRDs / incidents / ADRs** Spark : le **frontmatter du fichier MD port
 
 ## Travail à plusieurs (Mac mini partagé)
 
-Un builder = un PRD à la fois, périmètres orthogonaux. `git pull` chaque matin ; ne pas toucher aux tables/workflows d'un PRD qu'on ne porte pas sans coordonner ; commits courts et fréquents ; prévenir avant `docker compose down/restart` ou modif `.env` (cf. `spark-stack-ops` C5).
+Un builder = un PRD à la fois, périmètres orthogonaux. `git pull` chaque matin ; ne pas toucher aux tables/workflows d'un PRD qu'on ne porte pas sans coordonner ; commits courts et fréquents ; prévenir avant `docker-compose down/restart` ou modif `.env` (cf. `spark-stack-ops` C5).
 
 > Tout apprentissage méthodologique transverse : le promouvoir dans `LESSONS-LEARNED.md` du site **et**, s'il vaut pour tous les sites, dans `spark-kit/INCIDENTS.md`.

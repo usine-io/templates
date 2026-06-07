@@ -34,8 +34,8 @@ metadata:
 | Action | Propagation | Commande |
 |--------|-------------|----------|
 | **C2** Ajout/modif d'un **fichier** dans un dossier déjà monté | immédiate | rien |
-| **C1** `mv`/remplacement d'un **dossier** monté | ❌ NE propage PAS | `docker compose -p <prefix> restart <service>` |
-| **C5** Ajout d'un **nouveau volume bind** dans le compose | recrée le container | `docker compose -p <prefix> up -d caddy` (coupure ~3-5 s sur **tous** les fronts) |
+| **C1** `mv`/remplacement d'un **dossier** monté | ❌ NE propage PAS | `docker-compose -p <prefix> restart <service>` |
+| **C5** Ajout d'un **nouveau volume bind** dans le compose | recrée le container | `docker-compose -p <prefix> up -d caddy` (coupure ~3-5 s sur **tous** les fronts) |
 
 - **C1** : symptôme typique = « ma nouvelle page est invisible » après un `mv` de dossier. Restart obligatoire.
 - **C5** : **prévenir les builders** avant (coupe WMS/CRM/GRADING/proxy n8n simultanément ~3-5 s).
@@ -45,9 +45,9 @@ metadata:
 
 ```bash
 # Édition du Caddyfile → reload SANS downtime (préféré)
-docker compose -p <prefix> exec caddy caddy reload --config /etc/caddy/Caddyfile
+docker-compose -p <prefix> exec caddy caddy reload --config /etc/caddy/Caddyfile
 # Hard restart (rare, si reload ne suffit pas)
-docker compose -p <prefix> restart caddy
+docker-compose -p <prefix> restart caddy
 ```
 
 > Rappel archi : Caddy a `auto_https off` (Cloudflare gère le TLS) et injecte `X-Forwarded-Proto https` ; il bind **`127.0.0.1` uniquement** (jamais `0.0.0.0`). Détail : `docs/caddy.md`.
@@ -58,7 +58,7 @@ docker compose -p <prefix> restart caddy
 
 - Le YAML vit **côté hôte** (`~/.cloudflared/config-*.yml`), édité par `scripts/tunnel-up.sh` / `tunnel-down.sh` via des blocs marqués `# >>> spark-begin` / `# <<< spark-end`.
 - **Ne jamais éditer à la main** les blocs marqués (legacy `kyklos-begin`/`kyklos-end` à migrer si trouvés).
-- Cycle : `tunnel-up.sh` après `docker compose up` → ~10 s plus tard les sous-domaines répondent ; `tunnel-down.sh` au déprovisionnement. Détail : `docs/cloudflared.md`.
+- Cycle : `tunnel-up.sh` après `docker-compose up` → ~10 s plus tard les sous-domaines répondent ; `tunnel-down.sh` au déprovisionnement. Détail : `docs/cloudflared.md`.
 
 ---
 
@@ -108,9 +108,9 @@ volumes:
 ## Commandes de diagnostic fréquentes
 
 ```bash
-docker compose -p <prefix> ps                  # état de la stack
+docker-compose -p <prefix> ps                  # état de la stack
 docker logs <prefix>-<service>-1 --tail 50     # logs d'un service
-docker compose -p <prefix> restart <service>   # restart ciblé
+docker-compose -p <prefix> restart <service>   # restart ciblé
 docker run --rm alpine free -h                 # mémoire Colima
 ```
 

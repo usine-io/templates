@@ -174,7 +174,7 @@ npx @anthropic-ai/claude-code skills add n8n/agent-skills
 Apres le premier acces aux apps :
 1. **n8n** : Settings > API > Create API Key → `N8N_API_KEY` dans `.env`
 2. **NocoDB** : Team & Settings > Tokens > Add New Token → `NOCODB_API_TOKEN` dans `.env` (PAT `nc_pat_...`)
-3. Relancer `docker compose up -d` pour que le MCP n8n recharge `N8N_API_KEY`. Le token NocoDB est lu depuis `.env` par le CLI au runtime (pas besoin de restart).
+3. Relancer `docker-compose up -d` pour que le MCP n8n recharge `N8N_API_KEY`. Le token NocoDB est lu depuis `.env` par le CLI au runtime (pas besoin de restart).
 
 ---
 
@@ -217,7 +217,7 @@ Detail complet, modele de menace, recettes copy-paste et procedure d'audit recur
 ### Modifications infra
 
 - Travailler dans `infra/`.
-- Tester localement (`docker compose up -d`) avant de committer.
+- Tester localement (`docker-compose up -d`) avant de committer.
 - Commit avec prefixe : `infra: ...`, `workflow: ...`, `discovery: ...`.
 
 ---

@@ -46,7 +46,7 @@ Ordre éprouvé (détail : `cf-access.md` §10) — protéger les vhosts un par 
 1. **`-n8n` d'abord** (cobaye, faible trafic) : Access → Applications → Add → Self-hosted → domain `<prefix>-n8n.<domain>` → policy Allow (tes emails) → IdP/OTP → session 24h → Save. Vérifier qu'un anonyme prend un `302` et que l'outillage agent interne reste vert.
 2. **`-app`** : ⚠️ **pré-requis code, pas Cloudflare** — les fronts doivent appeler leur API en **same-origin** (`/webhook/...`), jamais l'URL absolue d'un autre sous-domaine, et **aucune iframe** d'UI NocoDB (sinon les XHR cassent sous Access). Puis créer l'app Access. **Coupe l'accès anonyme immédiatement** → fenêtre dédiée + prévenir l'équipe.
 3. **`-db`** (NocoDB) : décider **avant** l'accès du tooling host → préférer le **bypass reverse-proxy local** (`http://127.0.0.1:<port>` + en-tête `Host: <prefix>-db.<domain>`) qui reste insensible à Access sans Service Token. Puis créer l'app Access.
-4. **Headers Caddy + CORS** : ajouter le bloc `header { ... }` standard sur chaque vhost et le `Access-Control-Allow-Origin` scopé sur `-db` (copier depuis `SECURITY.md` §2.2/§2.3), puis `docker compose restart caddy`.
+4. **Headers Caddy + CORS** : ajouter le bloc `header { ... }` standard sur chaque vhost et le `Access-Control-Allow-Origin` scopé sur `-db` (copier depuis `SECURITY.md` §2.2/§2.3), puis `docker-compose restart caddy`.
 
 ## Phase 3 — Validation (~10 min)
 

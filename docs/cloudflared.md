@@ -136,7 +136,7 @@ Le process cloudflared lui-même est lancé en arrière-plan (ex. via `launchd` 
 ## 8. Cycle de vie typique
 
 ```bash
-# Mise en service (après docker compose up)
+# Mise en service (après docker-compose up)
 bash infra/scripts/tunnel-up.sh
 # → ~10s plus tard, les 4 URLs répondent
 
