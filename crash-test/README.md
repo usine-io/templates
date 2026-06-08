@@ -90,6 +90,56 @@ Claude va utiliser le CLI `nocodb.sh` de la skill `nocodb` (API v3) pour creer l
 
 Le champ s'appelle `type` (pas `uidt`).
 
+<details>
+<summary><strong>Mini-reference CLI <code>nocodb.sh</code></strong> — commandes utilisees dans le smoke test</summary>
+
+Le CLI est dans `~/.claude/skills/nocodb/scripts/nocodb.sh`. Alias recommande : `alias nc="bash ~/.claude/skills/nocodb/scripts/nocodb.sh"`. Help complet : `nc --help`.
+
+**Ordre des arguments** : toujours `workspace → base → table → field → record`.
+
+```bash
+# Prealable : charger les variables d'environnement
+set -a; source infra/.env; set +a
+export NOCODB_TOKEN="$NOCODB_API_TOKEN"
+export NOCODB_URL="http://127.0.0.1:${SPARK_HOST_HTTP_PORT:-18080}"
+export NOCODB_HOST_HEADER="${SPARK_PREFIX}-db.${SPARK_DOMAIN}"
+
+# Creer une base (dans un workspace)
+nc base:create <workspace> '{"title":"_t_smoke"}'
+# → retourne l'ID de la base (pXXX...)
+
+# Creer une table (dans une base) — SANS colonnes
+nc table:create <base> '{"title":"_t_pings"}'
+# → retourne l'ID de la table (mXXX...)
+
+# Creer un champ (dans une base + table) — APRES la table
+nc field:create <base> <table> '{"title":"source","type":"SingleLineText"}'
+nc field:create <base> <table> '{"title":"payload","type":"LongText"}'
+
+# Lister les champs (verifier la creation)
+nc field:list <base> <table>
+
+# Creer un record
+nc record:create <base> <table> '{"fields":{"source":"smoke-test","payload":"hello"}}'
+
+# Lire les records
+nc record:list <base> <table>
+
+# Nettoyage
+nc table:delete <base> <table>
+nc base:delete <base>
+
+# Fin
+unset NOCODB_TOKEN NOCODB_API_TOKEN
+```
+
+**Pieges courants** :
+- `base:create` attend un **JSON** (`'{"title":"..."}'`), pas une string simple
+- `field:create` prend **3 arguments** (`<base> <table> '<json>'`), pas 2
+- Les noms fonctionnent a la place des IDs (`nc record:list _t_smoke _t_pings`), mais les IDs sont plus rapides — ajouter `NOCODB_VERBOSE=1` pour les voir
+
+</details>
+
 ### Prompt 2 — Creer le credential NocoDB dans n8n
 
 > Cree un credential dans n8n de type `nocoDbApiToken` :
