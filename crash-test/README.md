@@ -10,7 +10,7 @@
 
 ### Pre-requis
 
-- [ ] Stack Spark qui tourne (`docker compose up -d`, les 4 services healthy)
+- [ ] Stack Spark qui tourne (`docker-compose up -d`, les 4 services healthy)
 - [ ] Tunnel Cloudflare ouvert (`https://<prefix>-n8n.<domain>` repond)
 - [ ] Compte owner cree dans n8n + compte admin dans NocoDB
 - [ ] Cles API renseignees dans `.env` (`N8N_API_KEY`, `NOCODB_API_TOKEN`)
@@ -23,7 +23,7 @@ Avant tout, tape dans Claude Code :
 > Liste les workflows n8n existants et les tables NocoDB.
 
 Claude appelle le MCP n8n (workflows) et le CLI `nocodb.sh` de la skill (tables). Si les deux repondent avec des listes (meme vides), l'outillage fonctionne. Si l'un echoue :
-- **n8n** : revoir la section "Travailler avec Claude Code" du README spark-kit (verifier `.mcp.json`, `N8N_API_KEY`, `docker compose ps`).
+- **n8n** : revoir la section "Travailler avec Claude Code" du README spark-kit (verifier `.mcp.json`, `N8N_API_KEY`, `docker-compose ps`).
 - **NocoDB** : verifier que `NOCODB_API_TOKEN` est dans `.env` et que la skill `nocodb` est installee globalement.
 
 ---
