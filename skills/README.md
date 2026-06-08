@@ -9,7 +9,7 @@ le **socle générique tiers** (référence des API n8n / NocoDB) et la **couche
 
 ## 1. Socle générique (skills tierces — `n8n-*` + `nocodb`)
 
-Référence des API et des nodes, **génériques** (pas propres à Spark). Installées via les packages amont — voir « Installation » §a.
+Référence des API et des nodes, **génériques** (pas propres à Spark). La skill `nocodb` est embarquée dans ce répertoire ; les 7 skills `n8n-*` sont fournies automatiquement par le serveur MCP n8n (préfixe `n8n-mcp-skills:`).
 
 | Skill | Rôle |
 |-------|------|
@@ -42,19 +42,11 @@ Les 5 skills proposées sont livrées. Pistes d'enrichissement futur : `spark-zp
 
 ## Installation
 
-Les skills sont globales (`~/.claude/skills/`, une fois par poste).
-
-**a. Socle générique** (packages amont) :
+La skill `nocodb` et les skills Spark sont embarquées dans ce répertoire. Les skills `n8n-*` sont fournies par le serveur MCP n8n (pas besoin de les copier). Installation en une commande (une fois par poste) :
 
 ```bash
-npx @anthropic-ai/claude-code skills add nocodb/agent-skills
-npx @anthropic-ai/claude-code skills add n8n/agent-skills
-```
-
-**b. Couche Spark** (ce répertoire) :
-
-```bash
-cp -R spark-* ~/.claude/skills/
+cd ~/spark/templates/skills
+cp -R nocodb spark-* ~/.claude/skills/
 ```
 
 Vérifier : au démarrage d'une session Claude Code dans un repo Spark, `/skill spark-nocodb-v3-patterns` et `/skill nocodb` doivent toutes deux être listées.
