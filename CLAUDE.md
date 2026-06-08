@@ -126,7 +126,8 @@ Utilisation type :
 ```bash
 set -a; source infra/.env; set +a
 export NOCODB_TOKEN="$NOCODB_API_TOKEN"
-export NOCODB_URL="https://<prefix>-db.<domain>"
+export NOCODB_URL="http://127.0.0.1:${SPARK_HOST_HTTP_PORT:-18080}"
+export NOCODB_HOST_HEADER="${SPARK_PREFIX}-db.${SPARK_DOMAIN}"
 bash ~/.claude/skills/nocodb/scripts/nocodb.sh table:list <base>
 unset NOCODB_TOKEN NOCODB_API_TOKEN
 ```
@@ -162,12 +163,14 @@ Le script source `infra/.env` et lance `docker run --network spark_spark` en mod
 
 ### Installation des skills
 
-Les skills sont globales (une seule fois par poste, dans `~/.claude/skills/`) :
+Les skills sont globales (une seule fois par poste, dans `~/.claude/skills/`). Elles sont embarquees dans le repo templates :
 
 ```bash
-npx @anthropic-ai/claude-code skills add nocodb/agent-skills
-npx @anthropic-ai/claude-code skills add n8n/agent-skills
+cd ~/spark/templates/skills
+cp -R nocodb spark-* ~/.claude/skills/
 ```
+
+Les 7 skills n8n (`n8n-workflow-patterns`, `n8n-node-configuration`, etc.) sont fournies automatiquement par le serveur MCP n8n — pas besoin de les installer separement.
 
 ### Obtention des cles API
 

@@ -125,7 +125,7 @@ Le champ s'appelle `type` (pas `uidt`).
 >    return [{ json: { insert_body: JSON.stringify(body) } }];
 >    ```
 > 3. **HTTP Request "Insert ping"** : POST vers NocoDB pour creer un record dans `_t_pings`
->    - URL : `http://nocodb:8080/api/v3/<base_id>/tables/<table_id>/records`
+>    - URL : `http://nocodb:8080/api/v3/data/<base_id>/<table_id>/records`
 >    - Body : `={{ $json.insert_body }}` (jsonBody, expression qui injecte la string du Code node)
 >    - Credential : `NocoDB API _t_smoke`
 > 4. **Code node "Prep echo call"** : construit le payload pour appeler `_t_echo` (simule ce qu'un webhook NocoDB aurait envoye) :
@@ -157,7 +157,7 @@ Le champ s'appelle `type` (pas `uidt`).
 >    return [{ json: { ping_id: pingId } }];
 >    ```
 > 3. **HTTP Request "Read ping"** (route R3) : GET vers NocoDB pour relire le record du ping
->    - URL : `http://nocodb:8080/api/v3/<base_id>/tables/<t_pings_id>/records/<ping_id>`
+>    - URL : `http://nocodb:8080/api/v3/data/<base_id>/<t_pings_id>/records/<ping_id>`
 >    - Credential : `NocoDB API _t_smoke`
 > 4. **Code node "Prep echo insert"** : construit le body d'insert pour `_t_echoes` :
 >    ```js
@@ -171,7 +171,7 @@ Le champ s'appelle `type` (pas `uidt`).
 >    return [{ json: { insert_body: JSON.stringify(body) } }];
 >    ```
 > 5. **HTTP Request "Insert echo"** : POST vers NocoDB pour creer un record dans `_t_echoes`
->    - URL : `http://nocodb:8080/api/v3/<base_id>/tables/<t_echoes_id>/records`
+>    - URL : `http://nocodb:8080/api/v3/data/<base_id>/<t_echoes_id>/records`
 >    - Body : `={{ $json.insert_body }}` (jsonBody)
 >    - Credential : `NocoDB API _t_smoke`
 >
@@ -196,7 +196,7 @@ Le champ s'appelle `type` (pas `uidt`).
 | `ERR_INVALID_REQUEST_BODY` ou `Property 'fields' on index 0 must be a JSON object` | Format d'insert incorrect : wrapper `records` en trop dans le body de la requete | Le body doit etre `{"fields": {...}}`, pas `{"records": [{"fields": {...}}]}`. Le wrapper `records` n'existe que dans la reponse. |
 | R1 echoue (401 / token invalide) | Token `xc-token` invalide ou credential mal configure | Verifier que le credential est de type `nocoDbApiToken` (pas Header Auth) avec `host` = `http://nocodb:8080` |
 | R2 echoue (echo jamais execute) | Le HTTP Request "Call echo" n'atteint pas le webhook | Verifier que l'URL est `http://n8n:5678/webhook/_t_echo` (hostname Docker interne, pas l'URL externe) |
-| R3 echoue (lecture vide / 404) | Filtre `where` mal forme ou mauvais ID de record | Syntaxe NocoDB v3 pour GET by id : `/records/<id>`. Pour filtre : `(Id,eq,<value>)` sans guillemets autour de la valeur numerique |
+| R3 echoue (lecture vide / 404) | URL mal formee ou mauvais ID de record | URL v3 : `/api/v3/data/<base>/<table>/records/<id>` (segment `data/` obligatoire, pas de segment `tables/`). Pour filtre : `(Id,eq,<value>)` sans guillemets autour de la valeur numerique |
 | Colonnes absentes dans `_t_pings` / `_t_echoes` | `table:create` n'a pas cree les colonnes | Les colonnes doivent etre creees separement via `field:create` apres la table. Format : `{"title": "source", "type": "SingleLineText"}` |
 | Tout echoue | MCP non connectes | Verifier `.mcp.json`, relancer Claude Code |
 
