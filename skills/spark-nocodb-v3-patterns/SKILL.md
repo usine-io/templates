@@ -1,17 +1,17 @@
 ---
 name: spark-nocodb-v3-patterns
-description: Pièges et patterns empiriques NocoDB v3 (CE 2026.04.5+) sur stack Spark. Use when modeling data, creating NocoDB tables/fields, writing n8n workflows that read/write NocoDB, debugging Links/Lookups/filters, or hitting "le lien ne se crée pas", "where sur FK renvoie 0", "bulk delete silencieux", "Lookup renvoie un array/null". Complète (ne remplace pas) la skill `nocodb` de référence API.
+description: Pièges et patterns empiriques NocoDB v3 (CE 2026.04.5+) sur stack Spark. Use when modeling data, creating NocoDB tables/fields, writing n8n workflows that read/write NocoDB, debugging Links/Lookups/filters, or hitting "le lien ne se crée pas", "where sur FK renvoie 0", "bulk delete silencieux", "Lookup renvoie un array/null", "/links renvoie records vide", "GET record lent". Complète (ne remplace pas) la skill `nocodb` de référence API.
 metadata:
   spark:
     layer: data
-    source: spark-pitfalls-catalog (N1-N25)
+    source: spark-pitfalls-catalog (N1-N28)
     nocodb_version: "2026.04.5+ CE"
 ---
 
 # NocoDB v3 — pièges & patterns Spark
 
 > Couche **empirique** au-dessus de la skill `nocodb` (qui documente l'API v3 brute).
-> Ici : ce qui fait perdre 20-60 min à découvrir et 3 s à éviter. Cristallisé sur la chaîne WMS v2 (102 assertions E2E, 6 PRDs) puis enrichi.
+> Ici : ce qui fait perdre 20-60 min à découvrir et 3 s à éviter. Cristallisé sur la chaîne WMS v2 (102 assertions E2E, 6 PRDs) puis enrichi (dernier : 2026-07-15, N26-N28 + N25 raffiné).
 > **Cible : NocoDB Community Edition 2026.04.5+, API v3, PAT (`xc-token`).**
 
 ---
@@ -46,6 +46,7 @@ GET /api/v3/data/{base}/{table}/links/{link_field_id}/{record_id}?fields=Id,nom,
 ```
 
 ⚠️ **N21** : sans `?fields=`, `/links` ne renvoie **que le display field** (1er SingleLineText). Tous les autres champs sont *omis* (même pas `null`). Toujours expliciter `?fields=`.
+⚠️ **N26 — 🚨 le `?fields=` d'un `/links` doit inclure `Id`** : `?fields=code,nom` (sans `Id`) → `records: []` **vide silencieux** alors que les liens existent. Pire que N21 : on perd les records eux-mêmes, pas juste des champs. Toujours `?fields=Id,…`.
 ⚠️ Résolution N+1 par défaut → voir pattern d'agrégat par Lookups plus bas (N24).
 
 ### 3. `where` sur un champ Link ne marche pas (N7/N8)
@@ -67,14 +68,15 @@ Deux contournements (N8) :
 
 ---
 
-## Lookups (N19/N20/N24/N25)
+## Lookups (N19/N20/N24/N25/N27)
 
-Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 4 chausse-trappes :
+Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 5 chausse-trappes :
 
 - **N19 — schéma de création** : `options.related_field_id` (= ID du **Link** sur la table source) + `options.related_table_lookup_field_id` (= ID du **champ à lookup-er** sur la cible). **PAS** `fk_relation_column_id` / `fk_lookup_column_id` (noms intuitifs mais faux → 400).
 - **N20 — réponse = ARRAY** : un Lookup renvoie `["Samsung Galaxy S7"]`, jamais la string nue, **même** pour un belongsTo 1:1. Le consommateur fait `champ[0]`.
 - **N24 — agrégat N:N propre** : poser des Lookups sur la **table de jonction** (ex. `piece_id_l` via Link pieces + `loc_type_l` via Link localisations) permet de fetch toutes les jointures avec attributs résolus **en 1 call** → agrégat côté Code node. Évite le N+1×2. **Pattern réutilisable.**
-- **N25 — 🚨 deux Lookups dans le même `?fields=` s'écrasent** : `?fields=Id,sku_libelle,imei_numero` renvoie l'un correct et l'autre `[null]`, indépendamment de l'ordre. Bug confirmé 2026.04.5 (curl interne ET externe). **Workaround** : un fetch HTTP **par** Lookup, puis combiner dans Build Response (coûte 1 call extra par Lookup).
+- **N25 (raffiné 2026-07-15) — 🚨 la collision de Lookups est PAR LIEN** : plusieurs Lookups du **même** Link coexistent dans un seul `?fields=` (ex. `sku_code_lookup` + `sku_libelle_complet`, tous deux via le Link `sku_kyklos` → les 2 corrects). C'est un Lookup d'un **autre** Link dans le même `?fields=` qui revient `[null]` — valeur perdue, sur `/records/{id}` comme sur les listes. **Workaround : 1 fetch HTTP par Link porteur de Lookups** (pas par Lookup), combiner dans Build Response. ⚠️ **Faux négatif de test** : sur un record dont le lien est vide, `[]` semble correct → tester la collision sur un record où **tous** les liens concernés sont peuplés avant de "simplifier" des fetchs séparés existants.
+- **N27 — 🚨 Lookup sur un lien m2m = `null` systématique** : un Lookup posé sur un Link `relation_type: "mo"` (m2m) renvoie `null` partout, même avec une config identique aux Lookups belongsTo qui marchent et un lien peuplé. **Vérifier `relation_type` du Link (meta table) AVANT de créer un Lookup dessus.** Workaround batching sans changement de schéma : joindre via une table intermédiaire belongsTo + colonne FK dénormalisée (ex. `dossiers → ligne_commande` par `/links` inverse par ligne + `lignes_commande.produit_kyklos_id`) → O(intermédiaires) appels au lieu de O(records).
 
 ---
 
@@ -84,7 +86,7 @@ Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 4 chauss
 |---|---|
 | N1 | **PAT (`xc-token`) sur v3 uniquement** — v1/v2 → 403 sur 2026.04.5+. |
 | N9 | **GET single par valeur naturelle** (code, ref) : `?where=(code,eq,X)&pageSize=1` puis check `records.length === 1`. Pas d'endpoint dédié. |
-| N10 | **GET single par ID interne** : `GET /records/{id}` (sans `?where`) — plus rapide quand on a l'id. |
+| N10 | **GET single par ID interne** : `GET /records/{id}` (sans `?where`) — plus rapide quand on a l'id. Toujours avec `?fields=` (N28). |
 | N11 | **SingleSelect création** : `options.choices: [{title:"X"}, …]` (pas besoin de color/id). |
 | N12 | **Update SingleSelect** : PATCH le field avec la liste **complète** des choices (pas un append — sinon on perd les existants). |
 | N13 | **belongsTo crée auto un Link inverse** côté cible (`tableSource` ou `tableSource1`). Indispensable pour les agrégats inverses. Trouvable via `field:list`. |
@@ -93,6 +95,7 @@ Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 4 chauss
 | N16 | **Append-only sur tables d'audit** : pas de DELETE, correction = mouvement **compensatoire** (`mouvements_stock`, `evenements`). |
 | N17 | **PATCH single** : `{id, fields:{…}}` (objet). **PATCH bulk** : `[{id, fields}, …]` (array). |
 | N18 | **MCP NocoDB instable** sur 2026.04.5+ → utiliser le **CLI `nocodb.sh`** de la skill `nocodb`. Cf. INC-2026-05-19. |
+| N28 | **🚨 GET `/records/{id}` sans `?fields=` = 10-35× plus lent** (150-750 ms vs ~20 ms mesuré) : NocoDB résout **toutes** les expansions (objets belongsTo, m2m imbriqués, jonctions `_nc_m2m_*`) même si le payload final paraît petit. `?fields=` systématique sur tout GET par id dans un workflow. |
 
 ---
 
@@ -107,9 +110,10 @@ Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 4 chauss
 ## Check-list avant tout HTTP NocoDB dans un workflow
 
 1. Écriture avec FK ? → insert **puis** `POST /links` (N3/N4).
-2. Lecture qui a besoin des FK ? → `/links?fields=…` explicite (N21), ou Lookups (N24) en pesant N25.
+2. Lecture qui a besoin des FK ? → `/links?fields=Id,…` explicite (N21 + **Id obligatoire** N26), ou Lookups (N24) en pesant N25/N27 (1 fetch par **lien** ; jamais sur un lien m2m).
 3. Filtre sur relation ? → **pas** de `where` sur Link (N7) ; /links inverse (N8a) ou dénorm (N8b) ; FK normale = nom de colonne réel.
 4. Bulk ? → batch de 10 + check du retour (N2).
 5. Lecture de l'id créé ? → `records[0].id`.
+6. GET par id ? → `?fields=` systématique, sinon 10-35× plus lent (N28).
 
 > Promouvoir tout nouveau piège confirmé ici **et** dans `spark-kit/INCIDENTS.md` s'il est transverse à plusieurs sites.

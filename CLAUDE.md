@@ -31,10 +31,11 @@ Distillation toujours-en-contexte (le detail vit dans les skills coeur). Si un s
 
 **NocoDB (data)**
 - **N3/N4** : insert avec FK ≠ creation du lien (juste un compteur fantome). Apres l'insert, POST `/api/v3/data/{base}/{table}/links/{link_field_id}/{record_id}` body `[{id:X}]`.
-- **N5/N21** : lecture Links = compteurs, pas d'objets. Resoudre via `/links?fields=Id,nom,...` (sans `?fields=`, seul le display field revient).
+- **N5/N21/N26** : lecture Links = compteurs, pas d'objets. Resoudre via `/links?fields=Id,nom,...` (sans `?fields=`, seul le display field revient ; sans `Id` dans le fields → `records:[]` vide silencieux).
 - **N7** : `?where=(champ_link,eq,X)` ne filtre PAS (renvoie 0). Passer par le `/links` inverse, ou un Link `belongsTo` denormalise direct.
 - **N2** : bulk insert ET delete cap a **10**/call. Le delete >10 echoue **silencieusement** (0 supprime, aucune erreur). Batcher + verifier le retour.
-- **N25** : 2 Lookups dans le meme `?fields=` s'ecrasent (l'un revient `[null]`). Faire 1 fetch HTTP par Lookup.
+- **N25/N27** : Lookups de liens **differents** dans le meme `?fields=` s'ecrasent (`[null]`) → 1 fetch par **lien** (Lookups d'un meme lien = partageables). Lookup sur un lien **m2m** = null systematique → verifier `relation_type` avant de le creer.
+- **N28** : GET `/records/{id}` sans `?fields=` = 10-35× plus lent (NocoDB resout toutes les expansions). `?fields=` systematique sur les GET par id.
 - **Wrapping** : reponse POST/PATCH = `{records:[{id,fields}]}`. En n8n : `{{ $json.records[0].id }}`, jamais `{{ $json.id }}`.
 
 **n8n (backend)**
