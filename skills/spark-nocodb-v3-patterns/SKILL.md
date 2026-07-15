@@ -68,15 +68,16 @@ Deux contournements (N8) :
 
 ---
 
-## Lookups (N19/N20/N24/N25/N27)
+## Lookups (N19/N20/N24/N25/N27/N29)
 
-Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 5 chausse-trappes :
+Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 6 chausse-trappes :
 
 - **N19 — schéma de création** : `options.related_field_id` (= ID du **Link** sur la table source) + `options.related_table_lookup_field_id` (= ID du **champ à lookup-er** sur la cible). **PAS** `fk_relation_column_id` / `fk_lookup_column_id` (noms intuitifs mais faux → 400).
 - **N20 — réponse = ARRAY** : un Lookup renvoie `["Samsung Galaxy S7"]`, jamais la string nue, **même** pour un belongsTo 1:1. Le consommateur fait `champ[0]`.
 - **N24 — agrégat N:N propre** : poser des Lookups sur la **table de jonction** (ex. `piece_id_l` via Link pieces + `loc_type_l` via Link localisations) permet de fetch toutes les jointures avec attributs résolus **en 1 call** → agrégat côté Code node. Évite le N+1×2. **Pattern réutilisable.**
 - **N25 (raffiné 2026-07-15) — 🚨 la collision de Lookups est PAR LIEN** : plusieurs Lookups du **même** Link coexistent dans un seul `?fields=` (ex. `sku_code_lookup` + `sku_libelle_complet`, tous deux via le Link `sku_kyklos` → les 2 corrects). C'est un Lookup d'un **autre** Link dans le même `?fields=` qui revient `[null]` — valeur perdue, sur `/records/{id}` comme sur les listes. **Workaround : 1 fetch HTTP par Link porteur de Lookups** (pas par Lookup), combiner dans Build Response. ⚠️ **Faux négatif de test** : sur un record dont le lien est vide, `[]` semble correct → tester la collision sur un record où **tous** les liens concernés sont peuplés avant de "simplifier" des fetchs séparés existants.
-- **N27 — 🚨 Lookup sur un lien m2m = `null` systématique** : un Lookup posé sur un Link `relation_type: "mo"` (m2m) renvoie `null` partout, même avec une config identique aux Lookups belongsTo qui marchent et un lien peuplé. **Vérifier `relation_type` du Link (meta table) AVANT de créer un Lookup dessus.** Workaround batching sans changement de schéma : joindre via une table intermédiaire belongsTo + colonne FK dénormalisée (ex. `dossiers → ligne_commande` par `/links` inverse par ligne + `lignes_commande.produit_kyklos_id`) → O(intermédiaires) appels au lieu de O(records).
+- **N27 — 🚨 Lookup sur un lien `mo` (many-to-one) = `null` systématique** : un Lookup posé sur un Link `relation_type: "mo"` renvoie `null` partout, même config identique aux Lookups qui marchent et lien peuplé. Les Lookups sur `belongsTo` et sur `mm` fonctionnent. **Vérifier `relation_type` du Link (meta table) AVANT de créer un Lookup dessus.** Workaround batching sans changement de schéma : joindre via une table intermédiaire belongsTo + colonne FK dénormalisée (ex. `dossiers → ligne_commande` par `/links` inverse par ligne + `lignes_commande.produit_kyklos_id`) → O(intermédiaires) appels au lieu de O(records).
+- **N29 — 🔥 Lookup `mm` sur une LISTE = superlinéaire (fondeur de Postgres)** : `records?pageSize=N&fields=…,lookup_mm` → N=50 : 0,5 s · N=150 : 6-8 s · N=500 : 25 s+ **et Postgres à 190 % CPU / +2 GiB** (cause racine d'OOM récurrents sur kyklos — endpoint appelé à chaque ouverture d'écran). Les requêtes zombies survivent aux timeouts client et au restart du client NocoDB — seul un restart Postgres purge. **Fix = inversion de requête** : partir de l'objet demandé (`/links` inverse : « les X compatibles de CE parent », trivial) puis ne fetcher que ces records (`where=(Id,in,…)`). Diagnostiquer par paliers de pageSize (5→50→150) pour isoler le champ toxique sans re-fondre la base.
 
 ---
 
@@ -110,7 +111,8 @@ Les Lookups sont la bonne arme contre le N+1 sur les agrégats — mais 5 chauss
 ## Check-list avant tout HTTP NocoDB dans un workflow
 
 1. Écriture avec FK ? → insert **puis** `POST /links` (N3/N4).
-2. Lecture qui a besoin des FK ? → `/links?fields=Id,…` explicite (N21 + **Id obligatoire** N26), ou Lookups (N24) en pesant N25/N27 (1 fetch par **lien** ; jamais sur un lien m2m).
+2. Lecture qui a besoin des FK ? → `/links?fields=Id,…` explicite (N21 + **Id obligatoire** N26), ou Lookups (N24) en pesant N25/N27 (1 fetch par **lien** ; jamais sur un lien `mo`).
+2bis. Lookup mm dans un fetch **liste** ? → **N29** : superlinéaire, interdit au-delà de ~50 rows. Inverser la requête (/links du parent + `(Id,in,…)`).
 3. Filtre sur relation ? → **pas** de `where` sur Link (N7) ; /links inverse (N8a) ou dénorm (N8b) ; FK normale = nom de colonne réel.
 4. Bulk ? → batch de 10 + check du retour (N2).
 5. Lecture de l'id créé ? → `records[0].id`.

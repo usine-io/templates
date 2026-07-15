@@ -36,6 +36,7 @@ Distillation toujours-en-contexte (le detail vit dans les skills coeur). Si un s
 - **N2** : bulk insert ET delete cap a **10**/call. Le delete >10 echoue **silencieusement** (0 supprime, aucune erreur). Batcher + verifier le retour.
 - **N25/N27** : Lookups de liens **differents** dans le meme `?fields=` s'ecrasent (`[null]`) → 1 fetch par **lien** (Lookups d'un meme lien = partageables). Lookup sur un lien **m2m** = null systematique → verifier `relation_type` avant de le creer.
 - **N28** : GET `/records/{id}` sans `?fields=` = 10-35× plus lent (NocoDB resout toutes les expansions). `?fields=` systematique sur les GET par id.
+- **N29** : Lookup mm dans un fetch **liste** = superlinéaire (150 rows=8s, 500=25s+ et Postgres a 190%). Inverser la requete : `/links` inverse du parent puis `where=(Id,in,...)`.
 - **Wrapping** : reponse POST/PATCH = `{records:[{id,fields}]}`. En n8n : `{{ $json.records[0].id }}`, jamais `{{ $json.id }}`.
 
 **n8n (backend)**
