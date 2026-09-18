@@ -22,6 +22,10 @@
 #                                 "s3:bucket/backups", "gdrive:spark", "sftp:/srv".
 #                                 Le script y ajoute "/<projet>". OBLIGATOIRE.
 #   SPARK_OFFSITE_RETENTION_DAYS  rétention offsite en jours (défaut 30).
+#   SPARK_OFFSITE_TRANSFERS       flux parallèles (défaut 2 — voir la note au-dessus du copy ;
+#                                 monter à 4+ seulement vers un backend rapide type S3/B2).
+#   SPARK_OFFSITE_TIMEOUT         timeout d'inactivité rclone (défaut 15m, le défaut rclone
+#                                 étant 5m — trop court pour de gros fichiers sur SFTP lent).
 #
 # Tant que SPARK_OFFSITE_REMOTE n'est pas défini, le script est INERTE (exit 1
 # explicite) — sans danger s'il est planifié avant configuration.
@@ -62,9 +66,18 @@ rclone mkdir "$TARGET" $DRY 2>/dev/null \
   || die "remote inaccessible : '$DEST'. Vérifier la config rclone (remote nommé ou RCLONE_CONFIG_* dans .env)."
 
 log "copy $BACKUP_ROOT -> $TARGET (logs/ exclus)"
+# --transfers 2 (et non 4) + --timeout 15m : sur des dumps de ~500 Mo vers un SFTP modeste
+# (serveur intégré de macOS), 4 flux concurrents s'affament mutuellement ; l'un se fige, et le
+# timeout d'inactivité PAR DÉFAUT de rclone (5 min) tue la connexion. Signature relevée le
+# 2026-09-18 sur kyklos : erreurs à 05:20:07 / 05:25:07 / 05:30:07 / 05:35:07 / 05:40:08 —
+# exactement toutes les 5 min, avec « connection lost » et « i/o timeout ».
+# Conséquence : le run sortait en FATAL (mail + écran d'erreurs) alors que la copie CONVERGEAIT
+# sur les passages suivants — de la fatigue d'alerte, qui noierait une vraie panne d'offsite.
+# Moins de flux = chacun plus rapide = moins de gel ; le timeout élargi absorbe le reste.
 rclone copy "$BACKUP_ROOT" "$TARGET" \
   --exclude "logs/**" \
-  --fast-list --transfers 4 --log-level NOTICE $DRY \
+  --fast-list --transfers "${SPARK_OFFSITE_TRANSFERS:-2}" --timeout "${SPARK_OFFSITE_TIMEOUT:-15m}" \
+  --log-level NOTICE $DRY \
   || die "rclone copy a échoué"
 
 log "rétention offsite : suppression > ${RET}j sur $TARGET"
