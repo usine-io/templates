@@ -2,7 +2,7 @@
 
 > Tu viens d'installer la stack (README de spark-kit). Les services tournent, le tunnel est ouvert. Maintenant : est-ce que ca marche vraiment ? Et surtout : comment construire ton premier truc utile ?
 >
-> Ce guide se fait **entierement avec Claude Code**. Tu ne vas pas ecrire de scripts ni configurer des nodes a la main. Tu vas decrire ce que tu veux, Claude le fait via le MCP n8n (workflows) et le CLI NocoDB de la skill `nocodb` (tables, donnees).
+> Ce guide se fait **entierement avec Claude Code**. Tu ne vas pas ecrire de scripts ni configurer des nodes a la main. Tu vas decrire ce que tu veux, Claude le fait via l'API REST v1 de n8n (workflows) et le CLI NocoDB de la skill `nocodb` (tables, donnees).
 
 ---
 
@@ -14,7 +14,7 @@
 - [ ] Tunnel Cloudflare ouvert (`https://<prefix>-n8n.<domain>` repond)
 - [ ] Compte owner cree dans n8n + compte admin dans NocoDB
 - [ ] Cles API renseignees dans `.env` (`N8N_API_KEY`, `NOCODB_API_TOKEN`)
-- [ ] Claude Code lance dans le repo du site, avec les MCP connectes
+- [ ] Claude Code lance a la racine du repo du site (il y trouve `infra/.env`)
 
 ### Verifier l'outillage live
 
@@ -22,8 +22,8 @@ Avant tout, tape dans Claude Code :
 
 > Liste les workflows n8n existants et les tables NocoDB.
 
-Claude appelle le MCP n8n (workflows) et le CLI `nocodb.sh` de la skill (tables). Si les deux repondent avec des listes (meme vides), l'outillage fonctionne. Si l'un echoue :
-- **n8n** : revoir la section "Travailler avec Claude Code" du README spark-kit (verifier `.mcp.json`, `N8N_API_KEY`, `docker-compose ps`).
+Claude appelle l'API REST n8n (`GET /api/v1/workflows` via le Caddy local : `http://127.0.0.1:<SPARK_HOST_HTTP_PORT>` + en-tete `Host: <prefix>-n8n.<domain>` + `X-N8N-API-KEY`) et le CLI `nocodb.sh` de la skill (tables). Si les deux repondent avec des listes (meme vides), l'outillage fonctionne. Si l'un echoue :
+- **n8n** : verifier `N8N_API_KEY` dans `infra/.env`, `docker-compose ps`, et l'en-tete `Host` (sans lui, Caddy rend un `200` au corps vide).
 - **NocoDB** : verifier que `NOCODB_API_TOKEN` est dans `.env` et que la skill `nocodb` est installee globalement.
 
 ---
@@ -149,11 +149,11 @@ unset NOCODB_TOKEN NOCODB_API_TOKEN
 >
 > Donne-moi l'ID du credential cree.
 
-**Important** : le type est `nocoDbApiToken` (credential natif n8n), pas Header Auth. Le MCP n8n n'a pas de tool fiable pour creer des credentials. Deux options :
+**Important** : le type est `nocoDbApiToken` (credential natif n8n), pas Header Auth. Deux options :
 
 1. **Via l'API REST n8n** (automatisable par Claude) :
    ```
-   POST http://n8n:5678/api/v1/credentials
+   POST /api/v1/credentials   (via le Caddy local + en-tete Host: <prefix>-n8n.<domain>)
    ```
    avec le body adequat et le header `X-N8N-API-KEY`.
 
@@ -235,7 +235,7 @@ unset NOCODB_TOKEN NOCODB_API_TOKEN
 > 1. Qu'une ligne est apparue dans `_t_pings` avec `source` = "smoke-test"
 > 2. Qu'une ligne est apparue dans `_t_echoes` avec le bon `ping_id`
 >
-> Si `_t_echoes` est vide, verifie l'execution du workflow `_t_echo` (mode error dans le MCP n8n).
+> Si `_t_echoes` est vide, verifie l'execution du workflow `_t_echo` (`GET /api/v1/executions?workflowId=<id>&status=error`, puis `GET /api/v1/executions/<id>?includeData=true`).
 >
 > Dis-moi si les 3 routes sont validees.
 
@@ -248,7 +248,7 @@ unset NOCODB_TOKEN NOCODB_API_TOKEN
 | R2 echoue (echo jamais execute) | Le HTTP Request "Call echo" n'atteint pas le webhook | Verifier que l'URL est `http://n8n:5678/webhook/_t_echo` (hostname Docker interne, pas l'URL externe) |
 | R3 echoue (lecture vide / 404) | URL mal formee ou mauvais ID de record | URL v3 : `/api/v3/data/<base>/<table>/records/<id>` (segment `data/` obligatoire, pas de segment `tables/`). Pour filtre : `(Id,eq,<value>)` sans guillemets autour de la valeur numerique |
 | Colonnes absentes dans `_t_pings` / `_t_echoes` | `table:create` n'a pas cree les colonnes | Les colonnes doivent etre creees separement via `field:create` apres la table. Format : `{"title": "source", "type": "SingleLineText"}` |
-| Tout echoue | MCP non connectes | Verifier `.mcp.json`, relancer Claude Code |
+| Tout echoue | Outillage live non joignable | Verifier `docker-compose ps`, `N8N_API_KEY` / `NOCODB_API_TOKEN` dans `infra/.env`, et l'en-tete `Host` des appels via le Caddy local |
 
 ### Nettoyer
 
@@ -297,7 +297,7 @@ Si le webhook ne fire pas (0 execution cote `_t_echo` apres un insert), c'est le
 
 ## Etape B — Ton premier use case : de l'idee au prototype
 
-Le smoke test etait technique. Maintenant on va construire un **vrai outil** — et cette fois, c'est toi qui decides ce que tu veux construire. Claude t'aide a le concevoir et l'implemente via les MCP.
+Le smoke test etait technique. Maintenant on va construire un **vrai outil** — et cette fois, c'est toi qui decides ce que tu veux construire. Claude t'aide a le concevoir et l'implemente via l'API REST n8n et le CLI NocoDB.
 
 L'exemple ci-dessous utilise un mini-CRM (suivi de prospects et relances), mais le processus est le meme pour n'importe quel besoin : suivi de stock, gestion de tickets SAV, planning d'atelier...
 
@@ -339,7 +339,7 @@ Claude ajuste et te repropose. Quand tu es satisfait, valide le plan.
 
 ### Etape B.2 — Claude implemente
 
-Une fois le plan valide, Claude cree tout via les MCP :
+Une fois le plan valide, Claude cree tout via l'API REST n8n et le CLI NocoDB :
 
 1. **Tables NocoDB** via `table:create` puis `field:create` pour chaque colonne (les colonnes ne se creent pas en passant `columns` dans le JSON de creation)
 2. **Donnees fictives** pour que l'outil ne soit pas vide (tu peux demander le volume : "mets 5 entreprises et une dizaine de contacts") — format d'insert v3 : `{"fields": {...}}`, un record a la fois
@@ -423,7 +423,7 @@ Le CRM etait un exercice. Ton vrai besoin est peut-etre un suivi de stock, un pl
 | A.2 | "Cree le credential NocoDB dans n8n" | Credential `nocoDbApiToken` via API REST n8n ou UI |
 | A.3 | "Cree le workflow ping" | Workflow n8n : webhook → insert NocoDB (R1) → appel echo (R2 W23) |
 | A.4 | "Cree le workflow echo" | Workflow n8n : webhook → lecture ping (R3) → insert echo (R1) |
-| A.5 | "Teste le smoke test" | Curl + verification via MCP |
+| A.5 | "Teste le smoke test" | Curl + verification via CLI NocoDB et API REST n8n (executions) |
 | **B.1** | **"/plan — je veux un outil pour..."** | **Plan d'architecture (le plus important)** |
 | B.2 | *(Claude execute le plan valide)* | Tables + seed + workflows + pages |
 | B.3 | "Teste le prototype" | Validation E2E |

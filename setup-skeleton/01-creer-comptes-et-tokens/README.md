@@ -117,7 +117,7 @@ Règle simple : un secret externe (token API tiers, mot de passe SMTP, etc.) ne 
 
 - **Tokens dans le presse-papier** : oublier de purger après usage. Le pattern `read -p ... && unset key` ci-dessus évite que la valeur traîne dans l'env du shell, mais le presse-papier système, lui, garde la dernière valeur — pense à copier autre chose après.
 - **Tokens dans des messages** : ne JAMAIS coller un token dans un commit, un message Slack, un message à Claude. Si par accident un token a été exposé : retourner dans l'UI, le révoquer, en créer un nouveau, refaire le step.
-- **Réutiliser le token entre sites** : non. Chaque site Spark a ses propres tokens. Si on en a plusieurs actifs sur n8n du même client associés à différents agents, les nommer pour pouvoir les révoquer ciblement (`setup-claude-...`, `mcp-...`, `cron-backup-...`).
+- **Réutiliser le token entre sites** : non. Chaque site Spark a ses propres tokens. Si on en a plusieurs actifs sur n8n du même client associés à différents agents, les nommer pour pouvoir les révoquer ciblement (`setup-claude-...`, `agent-api-...`, `cron-backup-...`).
 
 ## Statut du step
 

@@ -19,7 +19,7 @@ Porte 2 (interne, machine/agent)
             ne sort jamais de la machine → jamais vu par CF Access
 ```
 
-**Conséquence clé** : protéger un hostname **ne casse pas** les appels conteneur-à-conteneur (un MCP, un worker, un script interne qui tape `http://service:port`). CF Access ne voit que le trafic qui passe par le bord Cloudflare.
+**Conséquence clé** : protéger un hostname **ne casse pas** les appels conteneur-à-conteneur (un worker, un script interne qui tape `http://service:port`). CF Access ne voit que le trafic qui passe par le bord Cloudflare.
 
 À l'inverse, tout **client externe légitime** (CLI sur un laptop, autre serveur, callback d'un SaaS) passe par la porte 1 → il lui faut un moyen de franchir Access (cf. §5 Service Tokens).
 
@@ -31,7 +31,7 @@ Porte 2 (interne, machine/agent)
 |---|---|---|
 | **Humain via navigateur** | écrans internes, UI admin (n8n, NocoDB) | **CF Access** + IdP (SSO) ou One-time PIN |
 | **Machine externe (M2M)** | callback d'un SaaS, autre serveur, CLI headless | **Service Token** Access (§5), ou clé applicative au niveau du service |
-| **Machine interne (même hôte)** | MCP, worker, script conteneur | **rien à faire** — passe par le réseau interne, hors Access |
+| **Machine interne (même hôte)** | worker, script conteneur, runtime n8n→NocoDB | **rien à faire** — passe par le réseau interne, hors Access |
 
 > ⚠️ CF Access (SSO interactif) ne convient **pas** à une machine : prévoir un Service Token.
 
@@ -125,7 +125,7 @@ done
 - **Après (protégé)** : `HTTP 302 -> https://acme.cloudflareaccess.com/cdn-cgi/access/login/...`
 - Dans un navigateur : écran de login CF **avant** l'app.
 
-Vérifier aussi que l'**outillage interne reste vert** (un MCP / worker qui tape `http://service:port` doit continuer à répondre — preuve que la porte 2 est intacte).
+Vérifier aussi que l'**outillage interne reste vert** (un worker / script interne qui tape `http://service:port` doit continuer à répondre — preuve que la porte 2 est intacte).
 
 ---
 
@@ -144,7 +144,7 @@ Supprimer l'application Access (dashboard) ou `terraform destroy` la ressource �
 - **Scripts & fronts ne doivent pas pointer au mauvais endroit.** Une fois un vhost derrière Access, tout appelant non authentifié prend un `302` que `fetch`/`curl` ne suivent pas. Conventions à graver pour les développements futurs :
   - **Fronts** → webhooks en **relatif** (`/webhook/...`), même origine que le front ; jamais l'URL absolue d'un autre sous-domaine. Pas d'iframe d'UI NocoDB (cf. `pieges-nocodb-n8n.md` N24).
   - **Scripts/CLI host** → soit viser le **réseau Docker interne** (`http://service:port`, hors Access), soit envoyer un **Service Token** (`CF-Access-Client-Id`/`CF-Access-Client-Secret`) ou passer par `cloudflared access curl`. Exemple : le CLI NocoDB de la skill lit `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` depuis l'environnement.
-  - **MCP / outillage agent** : non concernés (réseau interne).
+  - **Outillage agent** (API REST n8n, CLI NocoDB depuis le Mac hôte) : via le Caddy local (`http://127.0.0.1:<port>` + en-tête `Host`), donc non concerné.
 
 ---
 
@@ -164,7 +164,7 @@ Ordre éprouvé pour protéger les 3 vhosts type d'un site Spark (`-n8n`, `-app`
 
 ### Étape 1 — vhost outil interne d'abord (bac à test) : `acme-n8n`
 - [ ] **Cloudflare** : Access → Applications → Add → **Self-hosted** → domain `acme-n8n.<domain>` → policy **Allow** (tes emails) → IdP/OTP → session 24h → Save.
-- [ ] Vérifier : anonyme → `302`. **Outillage agent intact** (le MCP tape `http://n8n:5678` en interne, jamais Cloudflare). Bon cobaye : faible trafic, impact nul si la policy est mal réglée.
+- [ ] Vérifier : anonyme → `302`. **Outillage agent intact** (l'API REST n8n appelée via le Caddy local `http://127.0.0.1:<port>` + `Host: acme-n8n.<domain>` ne traverse jamais Cloudflare → `GET /api/v1/workflows` toujours `200`). Bon cobaye : faible trafic, impact nul si la policy est mal réglée.
 
 ### Étape 2 — app métier : `acme-app`
 - [ ] **Pré-requis code (PAS Cloudflare)** : les fronts appellent leur API en **same-origin** (`/webhook/...`), jamais l'URL absolue d'un autre sous-domaine — sinon les XHR cassent sous Access (le cookie CF ne se propage pas cross-origin). Retirer aussi toute **iframe d'UI** d'un autre sous-domaine (cf. `pieges-nocodb-n8n.md` N24).

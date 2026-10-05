@@ -9,7 +9,7 @@ le **socle générique tiers** (référence des API n8n / NocoDB) et la **couche
 
 ## 1. Socle générique (skills tierces — `n8n-*` + `nocodb`)
 
-Référence des API et des nodes, **génériques** (pas propres à Spark). La skill `nocodb` est embarquée dans ce répertoire ; les 7 skills `n8n-*` sont fournies automatiquement par le serveur MCP n8n (préfixe `n8n-mcp-skills:`).
+Référence des API et des nodes, **génériques** (pas propres à Spark). La skill `nocodb` est embarquée dans ce répertoire ; les 6 skills `n8n-*` s'installent comme skills Claude Code (cf. `GETTING-STARTED.md` §2b). Ce sont des **références** : l'action live passe par l'API REST v1 de n8n et le CLI `nocodb.sh`.
 
 | Skill | Rôle |
 |-------|------|
@@ -20,7 +20,6 @@ Référence des API et des nodes, **génériques** (pas propres à Spark). La sk
 | `n8n-code-javascript` | Code nodes JS (`$input`, `$helpers`, `DateTime`) |
 | `n8n-code-python` | Code nodes Python (`_input`, `_json`, limitations) |
 | `n8n-validation-expert` | Interprétation des erreurs/warnings de validation |
-| `n8n-mcp-tools-expert` | Guide d'utilisation des outils MCP n8n |
 
 ## 2. Couche Spark (ce répertoire)
 
@@ -42,7 +41,7 @@ Les 5 skills proposées sont livrées. Pistes d'enrichissement futur : `spark-zp
 
 ## Installation
 
-La skill `nocodb` et les skills Spark sont embarquées dans ce répertoire. Les skills `n8n-*` sont fournies par le serveur MCP n8n (pas besoin de les copier). Installation en une commande (une fois par poste) :
+La skill `nocodb` et les skills Spark sont embarquées dans ce répertoire. Les skills `n8n-*` s'installent depuis l'écosystème officiel (cf. `GETTING-STARTED.md` §2b), pas depuis ce répertoire. Installation en une commande (une fois par poste) :
 
 ```bash
 cd ~/spark/templates/skills

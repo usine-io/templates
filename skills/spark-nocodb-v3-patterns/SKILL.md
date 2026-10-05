@@ -178,7 +178,7 @@ Trois règles, vécues le même jour sur 4 colonnes :
 | N15 | **Renommer une base = cosmétique** : `title` change, ID inchangé. Sûr pour l'archivage. |
 | N16 | **Append-only sur tables d'audit** : pas de DELETE, correction = mouvement **compensatoire** (`mouvements_stock`, `evenements`). |
 | N17 | **PATCH single** : `{id, fields:{…}}` (objet). **PATCH bulk** : `[{id, fields}, …]` (array). |
-| N18 | **MCP NocoDB instable** sur 2026.04.5+ → utiliser le **CLI `nocodb.sh`** de la skill `nocodb`. Cf. INC-2026-05-19. |
+| N18 | (historique — MCP retiré des sites, juillet 2026 ; ne concerne que qui l'utiliserait encore) **MCP NocoDB instable** sur 2026.04.5+ → le canal est le **CLI `nocodb.sh`** de la skill `nocodb` (API v3, PAT). Cf. INC-2026-05-19. |
 | N28 | **🚨 GET `/records/{id}` sans `?fields=` = 10-35× plus lent** (150-750 ms vs ~20 ms mesuré) : NocoDB résout **toutes** les expansions (objets belongsTo, m2m imbriqués, jonctions `_nc_m2m_*`) même si le payload final paraît petit. `?fields=` systématique sur tout GET par id dans un workflow. |
 
 ---

@@ -14,7 +14,7 @@ Spark implique 4 niveaux d'intervention. Dans une petite structure, une seule pe
 |------|--------------|-----------------|---------------|
 | **Admin / infra** | Installe le Mac Mini, Docker, Colima, le tunnel Cloudflare. Gere le `.env`, les mises a jour, les backups. | Terminal, `docker-compose`, fichiers de config, tunnel | [README spark-kit](https://github.com/spark-kit/spark-kit) (installation) |
 | **Gestionnaire de credentials** | Cree les comptes dans n8n/NocoDB. Configure les connexions aux logiciels metier (API keys, OAuth2) dans le coffre-fort n8n. | `<prefix>-n8n.<domain>` > Settings > Credentials | [§ Connecter une API externe](#connecter-une-api-externe) |
-| **Builder** | Concoit et construit les POCs avec Claude Code : tables NocoDB, workflows n8n, pages HTML. Ecrit les PRD, documente les lecons. | Claude Code + MCP, `<prefix>-n8n.<domain>`, `<prefix>-db.<domain>`, repo Git | Ce guide + [crash-test](crash-test/) |
+| **Builder** | Concoit et construit les POCs avec Claude Code : tables NocoDB, workflows n8n, pages HTML. Ecrit les PRD, documente les lecons. | Claude Code (API REST n8n + CLI NocoDB), `<prefix>-n8n.<domain>`, `<prefix>-db.<domain>`, repo Git | Ce guide + [crash-test](crash-test/) |
 | **Utilisateur final** | Utilise les outils construits par le builder : formulaires, dashboards, vues. Ne touche jamais a n8n. | `<prefix>-app.<domain>`, `<prefix>-db.<domain>` (vues/formulaires uniquement) | *(a creer : guide utilisateur)* |
 
 ### Qui accede a quoi
@@ -39,7 +39,6 @@ Chaque entreprise deployee a **son propre repo**. C'est la que tu lances Claude 
 <entreprise>/
 ├── CLAUDE.md                ← Claude Code le lit automatiquement a l'ouverture
 ├── LESSONS-LEARNED.md       ← ce qui a casse et ce qu'on a appris
-├── .mcp.json                ← connecte Claude Code aux MCP (gitignored)
 ├── infra/
 │   ├── .env                 ← secrets (gitignored, JAMAIS commite)
 │   ├── docker-compose.yml
@@ -49,15 +48,14 @@ Chaque entreprise deployee a **son propre repo**. C'est la que tu lances Claude 
 │   ├── apps/                ← pages HTML servies sur <prefix>-app.<domain>
 │   └── scripts/
 │       ├── tunnel-up.sh
-│       ├── tunnel-down.sh
-│       └── mcp-n8n.sh       ← wrapper MCP n8n pour Claude Code (NocoDB s'utilise via le CLI de la skill)
+│       └── tunnel-down.sh
 └── discovery/
     ├── onboarding/          ← rapports de visite, questionnaires
     ├── fiches/              ← une fiche par logiciel legacy etudie
     └── prds/                ← une PRD par POC envisage
 ```
 
-**Regle** : tu lances toujours Claude Code **depuis la racine du repo entreprise**. C'est ce qui permet a Claude de charger le `CLAUDE.md` et le `.mcp.json` automatiquement.
+**Regle** : tu lances toujours Claude Code **depuis la racine du repo entreprise**. C'est ce qui permet a Claude de charger le `CLAUDE.md` automatiquement et de trouver `infra/.env` (cles d'API de l'outillage).
 
 ---
 
@@ -68,7 +66,7 @@ Le fichier [`CLAUDE.md`](CLAUDE.md) est le guide que Claude Code lit en arrivant
 - Ce qu'est Spark (side-stack, pas remplacement)
 - Le vocabulaire critique (site, prefix, playbook)
 - La stack technique (quels services, quels ports)
-- Les skills et l'outillage live (MCP n8n + CLI NocoDB via la skill ; 7 skills n8n, 1 skill nocodb)
+- Les skills et l'outillage live (API REST v1 n8n + CLI NocoDB via la skill ; skills n8n de reference, 1 skill nocodb)
 - Les principes de travail (donnees, secrets, workflows, infra)
 - Les pieges connus (NC_DB_JSON, sizing Colima, tunnel pattern A)
 
@@ -93,13 +91,13 @@ Je veux pouvoir voir les commandes en retard et marquer les receptions.
 
 Claude va proposer une architecture (tables, endpoints, pages), tu valides ou tu ajustes, puis il implemente. Ca evite de construire un truc qui n'est pas ce que tu voulais.
 
-### Outillage live de Claude : MCP n8n + CLI NocoDB
+### Outillage live de Claude : API REST n8n + CLI NocoDB
 
-- **n8n** : MCP integre dans le compose. Claude lit/ecrit les workflows directement.
-- **NocoDB** : pas de MCP — Claude passe par le CLI `nocodb.sh` de la skill (API v3, PAT). Raison : l'ecosysteme MCP NocoDB n'est pas stable contre les versions recentes — on documente uniquement ce qui marche aujourd'hui. Cf. INC-2026-05-19 dans `spark-kit/INCIDENTS.md`.
+- **n8n** : API REST v1 (`/api/v1`, en-tete `X-N8N-API-KEY`, cle `N8N_API_KEY` dans `infra/.env`). Depuis le Mac hote, Claude passe par le Caddy local `http://127.0.0.1:<SPARK_HOST_HTTP_PORT>` avec l'en-tete `Host: <prefix>-n8n.<domain>` (evite Cloudflare Access). Pour modifier un workflow : sauvegarde, GET, modification du JSON, PUT `{name, nodes, connections, settings}` ; un changement de graphe exige `/deactivate` puis `/activate`.
+- **NocoDB** : Claude passe par le CLI `nocodb.sh` de la skill (API v3, PAT).
 
 Si Claude dit "je n'ai pas acces" :
-1. Pour n8n : `.mcp.json` existe a la racine du repo, la stack tourne (`docker-compose ps`), `N8N_API_KEY` est dans `.env`.
+1. Pour n8n : la stack tourne (`docker-compose ps`), `N8N_API_KEY` est dans `infra/.env`, et `GET /api/v1/workflows` via le Caddy local repond `200`.
 2. Pour NocoDB : la skill `nocodb` est installee (`~/.claude/skills/nocodb/`), `NOCODB_API_TOKEN` est dans `.env` et le PAT a ete copie immediatement apres la creation dans la modale (NocoDB ne le re-affiche jamais).
 
 ### Charge les skills avant de configurer
@@ -148,7 +146,7 @@ Ca aide Claude a comprendre le role de chaque workflow quand il explore la stack
 |--------|---|---------|
 | Mots de passe Postgres, cles de chiffrement | `.env` (infra) | Ce sont des secrets de la stack elle-meme |
 | API keys des logiciels metier (CRM, ERP, facturation) | **n8n Credentials** | Chiffres par `N8N_ENCRYPTION_KEY`, pas en clair dans des fichiers |
-| `N8N_API_KEY` (pour le MCP n8n) et `NOCODB_API_TOKEN` (PAT v3, lu par le CLI nocodb.sh) | `.env` (infra) | Necessaires a l'outillage agent |
+| `N8N_API_KEY` (API REST n8n) et `NOCODB_API_TOKEN` (PAT v3, lu par le CLI nocodb.sh) | `.env` (infra) | Necessaires a l'outillage agent |
 
 **Jamais** de secret metier dans `.env`. Si Claude te propose de mettre une cle API de logiciel dans `.env`, dis non — ca va dans n8n > Settings > Credentials.
 
@@ -199,7 +197,7 @@ Une fois le credential cree, dis a Claude :
 Claude va :
 - Lire la doc (si tu lui donnes le lien)
 - Utiliser le credential par nom dans les nodes HTTP Request
-- Construire le workflow via le MCP n8n
+- Construire le workflow via l'API REST n8n (creation `POST /api/v1/workflows` puis `/activate`)
 
 **Le reflexe a prendre** : quand tu veux connecter un logiciel, commence toujours par ces 3 choses :
 1. Le lien vers la doc API
@@ -224,7 +222,7 @@ Apres chaque prototype, demande a Claude :
 
 > Teste le prototype : verifie que toutes les pages chargent, que les formulaires ecrivent dans les bonnes tables, et que le dashboard affiche des chiffres coherents.
 
-Claude va tester chaque composant via les MCP et te faire un rapport. Si quelque chose casse, il debuggue.
+Claude va tester chaque composant (API REST n8n, CLI NocoDB, appels aux pages et webhooks) et te faire un rapport. Si quelque chose casse, il debuggue.
 
 ### Documenter ce qu'on a appris
 

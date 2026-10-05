@@ -37,7 +37,7 @@ Runbook pas-à-pas CF Access (dashboard + Terraform + Service Tokens + vérif) :
 | Token API scope **`Access: Apps and Policies — Edit`** | dash → My Profile → API Tokens | seulement si on fait la voie **Terraform** (IaC multi-sites). ⚠️ le token `Zone:DNS:Edit` du tunnel ne suffit pas |
 | (Recommandé) **WAF + Rate Limiting** sur la zone | dash → Security | ralentir le bruteforce des pages de login restantes |
 
-> 💡 Un CLI/MCP qui tape un vhost **depuis le réseau Docker interne** (`http://service:port`) n'est **pas** concerné par Access — il ne traverse jamais Cloudflare. Seuls les appelants qui passent par le bord CF ont besoin d'un Service Token.
+> 💡 Un CLI, un worker ou un script interne qui tape un vhost **depuis le réseau Docker interne** (`http://service:port`) n'est **pas** concerné par Access — il ne traverse jamais Cloudflare. Seuls les appelants qui passent par le bord CF ont besoin d'un Service Token.
 
 ## Phase 2 — Exécution (~30–45 min)
 
@@ -61,7 +61,7 @@ done
 
 - Anonyme → `302/403` vers le team domain sur les 3 vhosts.
 - Parcours **humain authentifié** en navigateur : login CF → l'app charge → une action réelle → les XHR `/webhook/*` passent (cookie same-origin).
-- **Outillage interne intact** : MCP/runtime n8n→NocoDB (`http://service:port`) répond toujours ; CLI host via bypass local → `200`.
+- **Outillage interne intact** : runtime n8n→NocoDB (`http://service:port`) répond toujours ; API REST n8n et CLI NocoDB host via bypass local → `200`.
 
 Audit complet (headers, webhooks publics, API 401, findings types `FX-01…11`) : `SECURITY.md` §6–§7.
 
