@@ -115,7 +115,7 @@ cd <client>
 ### 3c — Recuperer la memoire transverse Spark (pitfalls catalog)
 
 ```bash
-# Depuis un repo Spark existant (ex: kyklos), copier la memoire
+# Depuis un repo Spark existant (un site deja en service), copier la memoire
 # catalogue des pieges qui sera chargee automatiquement par Claude.
 src="$HOME/.claude/projects/-Users-$(whoami)-projects-<existing-client>-container/memory/spark-pitfalls-catalog.md"
 dst="$HOME/.claude/projects/-Users-$(whoami)-projects-<client>-container/memory/"
@@ -245,7 +245,7 @@ Chaque builder a son **propre user Unix** sur le Mac mini, son **propre clone** 
 
 ```bash
 # Builder 1
-tmux new -d -s benjamin-acme "cd ~/acme && claude remote-control --name 'Benjamin · ACME'"
+tmux new -d -s prenom-acme "cd ~/acme && claude remote-control --name 'Prenom · ACME'"
 
 # Builder 2
 tmux new -d -s martin-acme "cd ~/acme && claude remote-control --name 'Martin · ACME'"

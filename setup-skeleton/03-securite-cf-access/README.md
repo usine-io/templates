@@ -76,4 +76,4 @@ Audit complet (headers, webhooks publics, API 401, findings types `FX-01…11`) 
 - Runbook CF Access (dashboard + Terraform + Service Tokens) : [`docs/cf-access.md`](../../docs/cf-access.md)
 - Standard de durcissement (modèle de menace, headers, CORS, audit, findings) : `SECURITY.md` (repo méta `spark-kit`)
 - Recettes Caddy par site : `infra/docs/caddy.md` (repo du site)
-- PRD type « Auth Entra ID / M365 via CF Access » : voir un site déployé (ex. kyklos PRD-011)
+- PRD type « Auth Entra ID / M365 via CF Access » : voir le PRD d'authentification d'un site déjà déployé

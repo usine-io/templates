@@ -50,7 +50,7 @@ Garder l'inventaire brut (sans fiches détaillées) dans le rapport d'onboarding
 
 ## 3. Structure de la fiche-logiciel
 
-Format Markdown, 1 fichier = 1 logiciel, slug stable (`phone-check.md`, pas `phonecheck-v2.md`).
+Format Markdown, 1 fichier = 1 logiciel, slug stable (`mon-logiciel.md`, pas `monlogiciel-v2.md`).
 
 ### Frontmatter
 
