@@ -50,9 +50,9 @@ Verification :
 ls ~/.claude/skills/nocodb/   # doit contenir SKILL.md et scripts/
 ```
 
-### 2b — Skills n8n (7 skills)
+### 2b — Skills n8n (6 skills)
 
-Les 7 skills n8n font partie de l'ecosysteme officiel Claude Code. Verifier d'abord si elles sont deja presentes (machines equipees recemment) :
+Les 6 skills n8n (reference, pas d'outillage live) font partie de l'ecosysteme officiel Claude Code. Verifier d'abord si elles sont deja presentes (machines equipees recemment) :
 
 ```bash
 ls ~/.claude/skills/ | grep ^n8n
@@ -68,7 +68,6 @@ npx @anthropic-ai/claude-code skills add n8n-code-javascript
 npx @anthropic-ai/claude-code skills add n8n-code-python
 npx @anthropic-ai/claude-code skills add n8n-node-configuration
 npx @anthropic-ai/claude-code skills add n8n-validation-expert
-npx @anthropic-ai/claude-code skills add n8n-mcp-tools-expert
 
 # Alternative (Claude Code plugin marketplace) :
 # Dans une session Claude Code : /plugin marketplace add <skill-name>
@@ -76,12 +75,11 @@ npx @anthropic-ai/claude-code skills add n8n-mcp-tools-expert
 
 > Note : les references a `czlonkowski/n8n-skills` (dépôt tiers) sont obsoletes — utiliser l'ecosysteme officiel ci-dessus.
 
-Verification — doit lister **7 skills** :
+Verification — doit lister **6 skills** :
 ```bash
 ls ~/.claude/skills/ | grep ^n8n
 # n8n-code-javascript / n8n-code-python / n8n-expression-syntax
-# n8n-mcp-tools-expert / n8n-node-configuration / n8n-validation-expert
-# n8n-workflow-patterns
+# n8n-node-configuration / n8n-validation-expert / n8n-workflow-patterns
 ```
 
 ### 2c — Test dans Claude Code
@@ -187,7 +185,6 @@ Dans une nouvelle session Claude sur le repo :
    /skill nocodb
    /skill n8n-workflow-patterns
    /skill n8n-expression-syntax
-   /skill n8n-mcp-tools-expert
    ```
 2. Verifier la memoire chargee : Claude doit mentionner `spark-pitfalls-catalog` dans son contexte initial (si copiee en §3c).
 3. Tester un appel NocoDB :
@@ -198,7 +195,14 @@ Dans une nouvelle session Claude sur le repo :
    unset NOCODB_TOKEN NOCODB_API_TOKEN
    ```
    Doit lister au moins 1 workspace.
-4. Tester n8n MCP via Claude : `n8n_list_workflows` doit retourner les workflows actifs.
+4. Tester l'API REST n8n (via le Caddy local, sans passer par Cloudflare Access) :
+   ```bash
+   set -a; source infra/.env; set +a
+   curl -s -H "X-N8N-API-KEY: $N8N_API_KEY" -H "Host: <prefix>-n8n.<domain>" \
+     "http://127.0.0.1:${SPARK_HOST_HTTP_PORT:-18080}/api/v1/workflows?limit=10"
+   unset N8N_API_KEY
+   ```
+   Doit retourner un JSON `{"data": [...]}` (meme vide). Un `401` = `N8N_API_KEY` absente ou invalide ; un `200` au corps vide = en-tete `Host` manquant.
 
 Si toutes ces verifications passent → la machine et le repo sont **prets**. Sinon, revenir a l'etape correspondante.
 
@@ -208,7 +212,7 @@ Si toutes ces verifications passent → la machine et le repo sont **prets**. Si
 
 > Recommande sur Mac mini partage entre plusieurs builders. Permet d'avoir une UI
 > Claude Code Desktop / navigateur sur un laptop, tout en gardant Claude qui agit
-> sur le serveur (filesystem serveur, Docker serveur, MCP serveur), sans perdre la
+> sur le serveur (filesystem serveur, Docker serveur, API locales du serveur), sans perdre la
 > session a chaque deconnexion SSH.
 
 ### 8a — Lancer ta session sur le Mac mini
@@ -219,7 +223,7 @@ tmux new-session -d -s <prenom>-acme \
   "cd ~/acme && claude remote-control --name '<Prenom> · ACME'"
 ```
 
-Puis depuis ton laptop (Claude Code Desktop ou navigateur claude.ai/code), tu retrouves la session **"<Prenom> · ACME"** et tu lui parles. Tous les outils (Read/Edit/Bash, MCP n8n, CLI nocodb) agissent sur le serveur.
+Puis depuis ton laptop (Claude Code Desktop ou navigateur claude.ai/code), tu retrouves la session **"<Prenom> · ACME"** et tu lui parles. Tous les outils (Read/Edit/Bash, API REST n8n, CLI nocodb) agissent sur le serveur.
 
 ### 8b — Pourquoi tmux est obligatoire
 
@@ -283,7 +287,7 @@ Ce guide est volontairement **non scripte** (pas un `install.sh`). Raisons :
 - **Maintenance** : modifier le guide est plus simple que debug un script auto
 
 Evolutions envisagees :
-- Auto-creation du credentiel n8n via `n8n_manage_credentials` MCP (si l'API admin se stabilise)
+- Auto-creation du credentiel n8n via l'API REST v1 (`POST /api/v1/credentials`)
 - Templating `cookiecutter` pour `gh repo create` (au lieu de `--template`)
 - Skill `spark-bootstrap` qui execute ce guide automatiquement (futur)
 - Memoire `spark-pitfalls-catalog` packagee comme skill installable au lieu d'une copie manuelle §3c

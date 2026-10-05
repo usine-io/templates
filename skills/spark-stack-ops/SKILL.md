@@ -75,7 +75,7 @@ docker-compose -p <prefix> restart caddy
 - **Jamais** afficher la valeur d'un secret en sortie de tool/message — surtout `CF_API_TOKEN` (scope DNS), `N8N_ENCRYPTION_KEY`, `NOCODB_API_TOKEN` (très haut privilège). Vérifier **existence/longueur**, pas la valeur.
 - `.env` est **gitignored** — vérifier `git status` avant tout commit.
 - **Secrets métier** (API des logiciels du client) → **n8n > Settings > Credentials** (chiffrés par `N8N_ENCRYPTION_KEY`). Le `.env` ne porte que les secrets **d'infra**.
-- En cas de casse NocoDB/n8n, **réparer par le chemin MCP/CLI sanctionné** (rotation PAT, restart container MCP), pas `docker exec psql` / `curl` brut / `cat .env` ad-hoc.
+- En cas de casse NocoDB/n8n, **réparer par le chemin sanctionné** : l'**API REST v1** de n8n (via le Caddy local, patch scripté avec sauvegarde + assertions) et le **CLI `nocodb.sh`** (rotation PAT), pas `docker exec psql` / `curl` brut / `cat .env` ad-hoc.
 
 ---
 

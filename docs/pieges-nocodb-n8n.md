@@ -156,7 +156,7 @@ Vérifier `records.length` côté Code node pour tester l'existence.
 
 **Cause** : NocoDB 2026.04.5+ n'accepte les tokens PAT que sur l'API v3. v1/v2 exigent des tokens d'un autre type.
 
-**Solution** : utiliser exclusivement `/api/v3/...` avec les PAT. Si un outil tiers (MCP, SDK) cible v1/v2, il sera structurellement cassé sur les NocoDB récents — le basculer sur le CLI `nocodb.sh` de la skill.
+**Solution** : utiliser exclusivement `/api/v3/...` avec les PAT. Si un outil tiers (SDK, connecteur, package communautaire) cible v1/v2, il sera structurellement cassé sur les NocoDB récents — le basculer sur le CLI `nocodb.sh` de la skill.
 
 > Couvert aussi par INC-2026-05-19 dans `spark-kit/INCIDENTS.md`.
 
@@ -172,13 +172,15 @@ Vérifier `records.length` côté Code node pour tester l'existence.
 
 ---
 
-### N14 — Package MCP NocoDB (`@andrewlwn77/nocodb-mcp@0.2.2`) : incompatible NocoDB récent
+### N14 — (historique) Package MCP NocoDB (`@andrewlwn77/nocodb-mcp@0.2.2`) : incompatible NocoDB récent
 
-**Symptôme** : toute requête `mcp__nocodb-mcp__*` retourne `Forbidden - Unauthorized access`, même après rotation du PAT, même si le PAT fonctionne en curl direct v3.
+> ⏳ **Historique — MCP retiré des sites (juillet 2026)**, ne concerne que qui l'utiliserait encore. Les sites passent par le CLI `nocodb.sh` (API v3, PAT).
+
+**Symptôme** : toute requête `mcp__nocodb-mcp__*` (outil historique) retourne `Forbidden - Unauthorized access`, même après rotation du PAT, même si le PAT fonctionne en curl direct v3.
 
 **Cause** : le package NPM cible les endpoints v1/v2, rejetés par les NocoDB 2026.04.5+ pour les PAT. L'erreur ressemble à un problème d'auth, c'est en réalité une incompatibilité structurelle.
 
-**Solution** : basculer sur le CLI `nocodb.sh` (skill `nocodb`). Vérifier le diagnostic en greppant le source du container MCP pour `/api/v1/` ou `/api/v2/`.
+**Solution** : basculer sur le CLI `nocodb.sh` (skill `nocodb`). Vérifier le diagnostic en greppant le source du package (historique MCP) pour `/api/v1/` ou `/api/v2/` — même réflexe pour tout outil tiers suspect (cf. N12).
 
 > Couvert aussi par INC-2026-05-19 dans `spark-kit/INCIDENTS.md`.
 
@@ -236,7 +238,9 @@ Vérifier `records.length` côté Code node pour tester l'existence.
 
 ---
 
-### N19 — `patchNodeField` MCP NocoDB ne peut pas patcher les arrays/objets imbriqués
+### N19 — (historique) `patchNodeField` du MCP n8n ne peut pas patcher les arrays/objets imbriqués
+
+> ⏳ **Historique — MCP retiré des sites (juillet 2026)**, ne concerne que qui l'utiliserait encore. Équivalent REST v1 : le PUT remplace le JSON complet des nodes, donc on réécrit l'array entier (`node['parameters']['assignments']['assignments'] = [...]`) dans le script de patch — pas de restriction de chemin.
 
 **Symptôme** : `patchNodeField` sur `parameters.assignments.assignments` → erreur ou mutation ignorée.
 
@@ -244,7 +248,7 @@ Vérifier `records.length` côté Code node pour tester l'existence.
 
 **Solution** : utiliser `updateNode` avec `updates: {"parameters.assignments.assignments": [...]}` pour les paramètres de type array/objet.
 
-> Note : ce piège concerne techniquement le MCP n8n (pas NocoDB), mais est souvent rencontré lors d'opérations sur des nœuds NocoDB via le MCP.
+> Note (historique, MCP) : ce piège concerne l'outil n8n, pas NocoDB, mais était souvent rencontré sur des nœuds NocoDB.
 
 ---
 
@@ -278,7 +282,7 @@ Puis référencer dans le nœud HTTP : `={{ $('Prep').first().json.body }}` en m
 
 ### W2 — Expression `={"fields": {"qty": {{ X }}}}` : "Unmatched expression brackets"
 
-**Symptôme** : validation MCP ou exécution retourne "Unmatched expression brackets" pour une expression JSON template avec accolades mixtes.
+**Symptôme** : validation n8n ou exécution retourne "Unmatched expression brackets" pour une expression JSON template avec accolades mixtes.
 
 **Cause** : le parseur n8n confond les accolades de l'objet JSON avec les délimiteurs d'expression `{{ }}`.
 
@@ -321,7 +325,7 @@ throw new Error('Message d\'erreur explicite');
 
 ### W6 — IF node : `conditions.options` est obligatoire (structure stricte)
 
-**Symptôme** : création d'un nœud IF via MCP sans `conditions.options` → erreur de validation ou comportement imprévisible.
+**Symptôme** : création d'un nœud IF (via l'API REST ou à la main dans le JSON) sans `conditions.options` → la validation n8n refuse, ou comportement imprévisible.
 
 **Cause** : n8n 2.x exige une structure précise pour les options du nœud IF.
 
@@ -383,33 +387,37 @@ Sans `rightValue`.
 
 ---
 
-### W11 — `method` dynamique via expression : faux positif de validation MCP
+### W11 — (historique) `method` dynamique via expression : faux positif du validateur MCP
 
-**Symptôme** : `method: ={{ $json.method }}` dans un nœud HTTP Request → validation MCP marque "Invalid value", mais le workflow **fonctionne correctement** au runtime.
+> ⏳ **Historique — MCP retiré des sites (juillet 2026)**, ne concerne que qui l'utiliserait encore. Le PUT REST v1 ne passe pas par ce validateur : `method: ={{ $json.method }}` s'enregistre et fonctionne au runtime.
 
-**Cause** : le validateur MCP ne peut pas évaluer les expressions dynamiques au moment de la validation statique.
+**Symptôme** : `method: ={{ $json.method }}` dans un nœud HTTP Request → le validateur (historique MCP) marque "Invalid value", mais le workflow **fonctionne correctement** au runtime.
+
+**Cause** : le validateur statique ne peut pas évaluer les expressions dynamiques au moment de la validation statique.
 
 **Solution** : ignorer ce warning de validation spécifique. Activer le workflow quand même. C'est un faux positif documenté (W20 dans le pitfalls catalog).
 
 ---
 
-### W12 — `n8n_update_partial_workflow` MCP : `source`/`target`, pas `from`/`to`
+### W12 — (historique) `n8n_update_partial_workflow` MCP : `source`/`target`, pas `from`/`to`
+
+> ⏳ **Historique — MCP retiré des sites (juillet 2026)**, ne concerne que qui l'utiliserait encore. Équivalent REST v1 : dans le JSON du workflow, les connexions sont indexées par le **nom** du nœud source — `connections["<nom source>"]["main"][<sortie>] = [{"node": "<nom cible>", "type": "main", "index": 0}]` ; renommer un nœud impose de renommer ses clés de connexion.
 
 **Symptôme** : tentative de connexion entre deux nœuds avec `from`/`to` → erreur ou connexion non créée.
 
-**Cause** : l'API MCP `n8n_update_partial_workflow` utilise les clés `source`/`target` pour les connexions.
+**Cause** : l'outil `n8n_update_partial_workflow` utilise les clés `source`/`target` pour les connexions.
 
 **Solution** : toujours utiliser `source`/`target`. De même, `moveNode` attend le display name du nœud (pas son ID technique), et `patchNodeField` plante si la chaîne cible n'existe pas dans le nœud — vérifier l'état actuel du workflow avant de patcher.
 
 ---
 
-### W13 — `n8n_update_full_workflow` : param `name` obligatoire
+### W13 — PUT d'un workflow : `name` obligatoire
 
-**Symptôme** : `n8n_update_full_workflow` sans le paramètre `name` → erreur 422 `request/body must have required property 'name'`.
+**Symptôme** : `PUT /api/v1/workflows/<id>` sans `name` → erreur 422 `request/body must have required property 'name'`.
 
 **Cause** : l'API attend le nom du workflow dans le payload, même si on ne le modifie pas.
 
-**Solution** : toujours inclure `"name": "nom du workflow"` dans le payload de `n8n_update_full_workflow`.
+**Solution** : toujours envoyer `{name, nodes, connections, settings}` (repris du GET). Même règle pour l'outil historique `n8n_update_full_workflow`.
 
 ---
 
@@ -433,7 +441,9 @@ Sans `rightValue`.
 
 ---
 
-### W16 — `n8n_update_partial_workflow` : `patchNodeField` strict
+### W16 — (historique) `n8n_update_partial_workflow` : `patchNodeField` strict
+
+> ⏳ **Historique — MCP retiré des sites (juillet 2026)**, ne concerne que qui l'utiliserait encore. Équivalent REST v1 : même réflexe, en plus strict — GET, **assertions sur l'état de départ** (nodes, code exact) dans le script de patch, puis PUT (cf. skill `spark-n8n-pseudo-api`, W25/W26).
 
 **Symptôme** : `patchNodeField` sur un nœud → erreur si la chaîne cible n'existe pas dans la configuration actuelle du nœud.
 
@@ -576,10 +586,10 @@ Les pièges suivants sont déjà documentés (partiellement ou en totalité) dan
 |------|-------|-------------------|
 | N1 | NC_DB_JSON vs NC_DB | `spark-kit/INCIDENTS.md` INC-2026-05-05 |
 | N12 | PAT token v3-only | `spark-kit/INCIDENTS.md` INC-2026-05-19 + mémoire `feedback-nocodb-api-workspace-scoping` |
-| N14 | MCP NocoDB incompatible | `spark-kit/INCIDENTS.md` INC-2026-05-19 |
+| N14 | MCP NocoDB incompatible (historique) | `spark-kit/INCIDENTS.md` INC-2026-05-19 |
 | D2 | Colima crashloop silencieux | `spark-kit/INCIDENTS.md` INC wiki |
 | N2 | Bulk insert max 10 | mémoire `spark-pitfalls-catalog` |
 | N3 | Insert link ≠ créer lien | mémoire `spark-pitfalls-catalog` |
 | W3 | Branches parallèles | mémoire `spark-pitfalls-catalog` + mémoire `feedback-n8n-no-parallel-execution` |
 | W4 | Code node no HTTP | mémoire `feedback-n8n-code-node-no-http` |
-| W12 | MCP conventions source/target | mémoire `feedback-n8n-mcp-partial-update` |
+| W12 | conventions source/target (historique MCP) | mémoire `feedback-n8n-mcp-partial-update` |

@@ -81,7 +81,7 @@ if (!aFaire.length) {
 
 ## IF node (W5/W21)
 
-- **W5** : `conditions.options = {version:2, leftValue:"", caseSensitive:true, typeValidation:"strict"}` est **obligatoire** (le validator MCP refuse sinon).
+- **W5** : `conditions.options = {version:2, leftValue:"", caseSensitive:true, typeValidation:"strict"}` est **obligatoire** (la validation n8n refuse sinon).
 - **W21** : en `typeValidation:"strict"` + operator `string`, un `leftValue` numérique (ex. un id) → "Wrong type: '4' is a number…". Forcer en string : `={{ $json.x ? 'yes' : '' }}` ou `.toString()`.
 
 ## Method dynamique (upserts) (W17/W20)
@@ -89,7 +89,7 @@ if (!aFaire.length) {
 ```
 method = ={{ $json.mode === 'insert' ? 'POST' : 'PATCH' }}
 ```
-**W20** : ça déclenche un faux positif "Invalid value for method" en validation MCP **mais fonctionne au runtime**. Ignorer le warning, activer quand même.
+**W20** : fonctionne au runtime. (Historique — MCP retiré des sites, juillet 2026 : le validateur MCP y voyait un faux positif "Invalid value for method" ; le PUT REST v1 ne passe pas par ce validateur.)
 
 ### Le pattern qui en découle : « un item = un appel » (W17 poussé au bout)
 
@@ -147,20 +147,20 @@ Plus simple que le node `Execute Workflow`, transparent au runtime, permet de r�
 
 ---
 
-## Outils MCP n8n — réflexes (W12-W16, W18)
+## Agir sur n8n par l'API REST v1 — méthode principale (W13, W18, W25/W26)
 
-- **Valider avant d'activer** : `n8n_validate_workflow` (errors + warnings).
-- **Activer** : `activateWorkflow` via `n8n_update_partial_workflow` (plus pratique que l'UI).
-- **Débugger une erreur** : `n8n_executions action=get id=X includeData=true` → payload + erreur node par node. **Outil n°1.**
-- **Copier un pattern existant** : `n8n_get_workflow`.
-- **W18** : un `n8n_update_partial_workflow` est actif **immédiatement** (pas de reload webhook).
-- **W22/N-MCP** : `patchNodeField` ne patche pas `parameters.assignments.assignments` (object) → `updateNode` avec l'array complet. `n8n_update_full_workflow` exige `name` (sinon 422).
+Le canal des sites Spark (depuis 2026-07) est l'**API REST v1** de n8n : `/api/v1`, en-tête `X-N8N-API-KEY` (clé `N8N_API_KEY` dans `infra/.env`). Depuis le Mac hôte, passer par le **Caddy local** `http://127.0.0.1:<SPARK_HOST_HTTP_PORT>` avec l'en-tête `Host: <prefix>-n8n.<domain>` → pas de Cloudflare Access, pas de Service Token (sans l'en-tête `Host`, Caddy rend un `200` au corps vide).
 
----
+- **Copier un pattern existant** : `GET /api/v1/workflows/<id>` → JSON complet (nodes, connections, settings).
+- **Créer** : `POST /api/v1/workflows` `{name, nodes, connections, settings}` puis `POST /api/v1/workflows/<id>/activate`.
+- **Patcher** : sauvegarder (`GET` → fichier) → modifier le JSON en Python **avec assertions sur l'état de départ** → `PUT /api/v1/workflows/<id>` `{name, nodes, connections, settings}` (**W13** : `name` obligatoire, sinon 422). Un changement de **graphe** exige `POST /deactivate` puis `POST /activate` (W25).
+- **W18** : un PUT qui ne change que des **paramètres** est actif **immédiatement** (pas de reload webhook) — mais pas un changement de graphe (W25).
+- **Débugger une erreur** : `GET /api/v1/executions?workflowId=<id>&status=error` puis `GET /api/v1/executions/<id>?includeData=true` → payload + erreur node par node. **Outil n°1.**
+- **Valider** : l'API ne contrôle que la forme du payload, pas la configuration des nodes — la validation, c'est l'activation (une erreur de structure y remonte) puis un appel réel du webhook + lecture de l'exécution. Les skills `n8n-validation-expert` / `n8n-node-configuration` restent la référence pour la structure attendue des nodes.
 
-## Patcher un workflow ACTIF par l'API REST v1 (W25/W26)
+### Patcher un workflow ACTIF (W25/W26)
 
-Sur un site sans MCP (le canal recommandé depuis 2026-07), on patche en `GET → modifier le JSON en Python → PUT {name, nodes, connections, settings}`. Deux pièges qui coûtent chacun une demi-heure, et le second a mis un endpoint de production par terre.
+On patche en `GET → modifier le JSON en Python → PUT {name, nodes, connections, settings}`. Deux pièges qui coûtent chacun une demi-heure, et le second a mis un endpoint de production par terre.
 
 - **W25 — 🚨 un PUT qui change le GRAPHE n'est PAS pris en compte par l'instance active.** W18 (« actif immédiatement ») ne vaut que pour un changement de **paramètres**. Dès qu'on **ajoute des nodes ou des connexions**, l'instance active continue de servir **l'ancien graphe** : le GET de contrôle montre bien les nouveaux nodes et les bonnes connexions, mais l'exécution n'en enchaîne que les anciens — on croit à un bug de son propre code. ➡️ **`POST /activate` après `POST /deactivate`** à chaque changement de graphe. À mettre dans le script de patch, pas dans la tête.
 - **W26 — 🚨 `nodeCredentialType` SEUL ne suffit pas sur un node créé par l'API.** Un node HTTP construit à la main avec `authentication: predefinedCredentialType` + `nodeCredentialType: 'nocoDbApiToken'` part en **`Credentials not found`** au runtime — l'objet `credentials` est un champ **à part**, absent par défaut. Le workflow paraît parfait à la relecture API. ➡️ **Recopier `credentials` d'un node voisin qui marche** : `{'nocoDbApiToken': {'id': '…', 'name': '…'}}`.
@@ -168,6 +168,19 @@ Sur un site sans MCP (le canal recommandé depuis 2026-07), on patche en `GET �
 - **L'assertion post-PUT doit viser le CHAMP précis, pas le JSON entier** : `assert 'X' not in json.dumps(nodes)` échoue à tort si le **commentaire** posé par le patch mentionne X — vécu deux fois dans le même script le 2026-08-19. Asserter sur `node['parameters']['url']` ou le `jsCode` du node visé. Même classe de piège pour un **auditeur d'URLs** : parser les *expressions* (`={{ … }}`), pas la string brute — une regex qui tronque à la première quote a rendu ~50 % de faux positifs « fetch non borné » (les `where={{ encodeURIComponent(…) }}` invisibles).
 
 **Le garde-fou qui rend ces deux pièges bénins** : sauvegarder le workflow (`GET` → fichier) **avant** le patch, et écrire le script de patch avec des **assertions sur l'état de départ** (nom du workflow, présence des nodes attendus, code exact des Code nodes touchés, connexions attendues) — puis `--dry-run` par défaut, `--execute` explicite. Un patch qui échoue bruyamment sur un état inattendu vaut mieux qu'un patch qui « marche » sur un workflow qui a bougé. Restaurer = un PUT du fichier de sauvegarde.
+
+---
+
+## (historique) Outils MCP n8n — réflexes (W11/W20, W12, W16, N19)
+
+> ⏳ **Historique — MCP retiré des sites (juillet 2026)**, ne concerne que qui l'utiliserait encore. Équivalents REST v1 : section précédente.
+
+- Valider avant d'activer : `n8n_validate_workflow` (errors + warnings). REST : pas d'équivalent, activer puis tester l'exécution.
+- Activer : `activateWorkflow` via `n8n_update_partial_workflow`. REST : `POST /api/v1/workflows/<id>/activate`.
+- Débugger : `n8n_executions action=get id=X includeData=true`. REST : `GET /api/v1/executions/<id>?includeData=true`.
+- Copier un pattern : `n8n_get_workflow`. REST : `GET /api/v1/workflows/<id>`.
+- W12 : connexions en `source`/`target` dans `n8n_update_partial_workflow`. REST : clés `connections["<nom source>"].main[<sortie>]` → `[{node: "<nom cible>", type: "main", index: 0}]`.
+- N19 : `patchNodeField` ne patche pas `parameters.assignments.assignments` (object) → `updateNode` avec l'array complet ; `n8n_update_full_workflow` exige `name` (sinon 422). REST : le PUT réécrit les nodes entiers, donc pas de restriction de chemin ; `name` reste obligatoire (W13).
 
 ---
 

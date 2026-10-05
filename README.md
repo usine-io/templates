@@ -108,7 +108,7 @@ Chaque entreprise deployee a son propre repo. Convention :
 │   ├── docker-compose.yml
 │   ├── config/              Caddyfile, init-db.sh
 │   ├── apps/                pages HTML servies sur <prefix>-app.<domain>
-│   └── scripts/             tunnel, MCP wrappers
+│   └── scripts/             tunnel, scripts d'exploitation
 └── discovery/
     ├── onboarding/          rapports de visite
     ├── fiches/              une fiche par logiciel legacy etudie
