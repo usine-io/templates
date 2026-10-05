@@ -433,4 +433,4 @@ Le prompt B.1 est celui qui fait la difference. Plus tu decris ton besoin en ter
 
 ---
 
-*Crash test v1.1 (2026-06-08). Corrections : format insert NocoDB v3, credential nocoDbApiToken, chainage W23 (contournement webhook NocoDB CE 2026.06.0), CLI field:create obligatoire. Teste sur leolaw — NocoDB CE 2026.06.0, n8n 2.19.4.*
+*Crash test v1.1 (2026-06-08). Corrections : format insert NocoDB v3, credential nocoDbApiToken, chainage W23 (contournement webhook NocoDB CE 2026.06.0), CLI field:create obligatoire. Teste sur un site pilote — NocoDB CE 2026.06.0, n8n 2.19.4.*

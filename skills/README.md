@@ -37,7 +37,7 @@ Contenu source : mémoire `spark-pitfalls-catalog` (pièges N/W/C/F/P) + `LESSON
 
 ## Backlog
 
-Les 5 skills proposées sont livrées. Pistes d'enrichissement futur : `spark-zpl-labels` (gabarits ZPL + impression), `spark-external-connectors` (PhoneCheck/NSYS/Utopya une fois les connecteurs stabilisés).
+Les 5 skills proposées sont livrées. Pistes d'enrichissement futur : `spark-zpl-labels` (gabarits ZPL + impression), `spark-external-connectors` (logiciels de diagnostic, catalogues fournisseurs, une fois les connecteurs stabilisés).
 
 ## Installation
 

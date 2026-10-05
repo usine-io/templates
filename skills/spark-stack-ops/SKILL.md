@@ -57,7 +57,7 @@ docker-compose -p <prefix> restart caddy
 ## Cloudflare tunnel — pattern A (local-managed)
 
 - Le YAML vit **côté hôte** (`~/.cloudflared/config-*.yml`), édité par `scripts/tunnel-up.sh` / `tunnel-down.sh` via des blocs marqués `# >>> spark-begin` / `# <<< spark-end`.
-- **Ne jamais éditer à la main** les blocs marqués (legacy `kyklos-begin`/`kyklos-end` à migrer si trouvés).
+- **Ne jamais éditer à la main** les blocs marqués (d'anciens marqueurs propres à un site peuvent subsister : les migrer vers `spark-begin`/`spark-end`).
 - Cycle : `tunnel-up.sh` après `docker-compose up` → ~10 s plus tard les sous-domaines répondent ; `tunnel-down.sh` au déprovisionnement. Détail : `docs/cloudflared.md`.
 
 ---
@@ -85,7 +85,7 @@ Un script/CLI sur le Mac hôte qui vise un vhost public prendra un **302**. Pré
 
 ```bash
 # NocoDB via nocodb.sh (CLI de la skill `nocodb`)
-export NOCODB_URL="http://127.0.0.1:<KYKLOS_HOST_HTTP_PORT>"   # ex. 18080
+export NOCODB_URL="http://127.0.0.1:<SPARK_HOST_HTTP_PORT>"   # ex. 18080
 export NOCODB_HOST_HEADER="<prefix>-db.<domain>"               # Caddy route par Host header
 ```
 

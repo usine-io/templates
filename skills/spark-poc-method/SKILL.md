@@ -29,7 +29,7 @@ metadata:
 
 ## 🚨 Source de vérité : jamais NocoDB pour le business
 
-**La source de vérité business est toujours le système métier du client** (Phone Check, Pennylane, Google Sheets, ERP, WMS…). NocoDB n'est **jamais** la source de vérité business :
+**La source de vérité business est toujours le système métier du client** (logiciel de diagnostic, Pennylane, Google Sheets, ERP, WMS…). NocoDB n'est **jamais** la source de vérité business :
 - donnée qui **existe déjà** dans un legacy → NocoDB en est le **cache/staging** ;
 - donnée qui **n'existait nulle part** (ex. WMS d'un atelier papier) → NocoDB devient la **source pour cette donnée précise**.
 
@@ -43,7 +43,7 @@ Pour toute intégration externe, **deux phases** :
 - **Phase 1** : ingestion **fichier** (drop CSV/Excel/JSON) + **table + UI locale** (ex. admin des codes orphelins). On valide la modélisation et l'UX sur des données réelles, sans dépendre de l'API tierce.
 - **Phase 2** : connecteur API qui remplace l'ingestion fichier, une fois la phase 1 prouvée.
 
-Validé sur PhoneCheck, ZPL, Utopya. ➡️ Ne jamais commencer par le connecteur : on se retrouve à débugger l'API tierce **et** la modélisation en même temps.
+Validé sur trois intégrations (un logiciel de diagnostic, des étiquettes ZPL, un catalogue fournisseur). ➡️ Ne jamais commencer par le connecteur : on se retrouve à débugger l'API tierce **et** la modélisation en même temps.
 
 ---
 
@@ -51,7 +51,7 @@ Validé sur PhoneCheck, ZPL, Utopya. ➡️ Ne jamais commencer par le connecteu
 
 Quand le modèle interne est **plus fin** que la cible externe (PIM, catalogue marketplace), garder l'**interne en entité 1er ordre** (table dédiée) et faire une **correspondance N:1** vers le référentiel-cible externe.
 
-Exemple (PRD-010) : `sku_kyklos` (N, entité 1er ordre) → `ft_easycash` (1, référentiel-cible). Ne pas aplatir l'interne sur la maille externe — on perdrait de l'information métier. Pattern : `get-or-create idempotent` via clé naturelle déterministe.
+Exemple : `sku_ref` (N, entité 1er ordre, le SKU interne du site) → `fiche_reference` (1, référentiel-cible d'un partenaire). Ne pas aplatir l'interne sur la maille externe — on perdrait de l'information métier. Pattern : `get-or-create idempotent` via clé naturelle déterministe.
 
 > Un mauvais **taux de match** lors d'un mapping (ex. 14 % unmatched) n'indique pas toujours un défaut d'algo : **croiser avec le périmètre du référentiel cible** d'abord (le catalogue externe ne couvre peut-être pas ces produits → `unmatched` = signal « hors périmètre », pas un bug).
 
